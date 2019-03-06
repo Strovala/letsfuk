@@ -26,3 +26,13 @@ class Station(db.Model):
                 self.id, self.latitude, self.longitude, self.uuid
             )
         )
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String, index=True, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=False, unique=True)
+    password = db.Column(db.String, nullable=False)
+    salt = db.Column(db.String, nullable=False)
