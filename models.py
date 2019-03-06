@@ -22,6 +22,7 @@ class Station(db.Model):
 
     def __repr__(self):
         return (
-            f'<id {self.id} lat{self.latitude} '
-            f'lon{self.longitude} uuid{self.uuid}>'
+            '<id {} lat{} lon{} uuid{}>'.format(
+                self.id, self.latitude, self.longitude, self.uuid
+            )
         )
