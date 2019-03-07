@@ -1,11 +1,9 @@
 import os
 import json
-
-import uuid
-
 import bcrypt
-from flask import Flask, url_for, jsonify, request
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
@@ -21,9 +19,19 @@ def register():
     username = body.get("username")
     password = body.get("password")
     email = body.get("email")
+    if password is None or password == "":
+        return jsonify("Password can't be empty"), 400
     encoded_password = password.encode()
     hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
-    x = 1
+    user = User(username=username, password=hashed_password, email=email)
+    db.session.add(user)
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        db.session.remove()
+        return jsonify("Error occured :{}".format(e)), 400
+    return jsonify(user.to_dict()), 201
 
 
 @app.route('/<int:user_id>', methods=["GET"])
