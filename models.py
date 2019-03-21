@@ -14,11 +14,12 @@ class Station(db.Model):
     latitude = db.Column(db.String(), nullable=False)
     longitude = db.Column(db.String(), nullable=False)
 
-    def __init__(self, latitude, longitude, uuid=None):
-        self.latitude = latitude
-        self.longitude = longitude
-        if uuid is not None:
-            self.uuid = uuid
+    def to_dict(self):
+        return {
+            "station_id": self.station_id,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+        }
 
     def __repr__(self):
         return (
@@ -33,12 +34,42 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String, index=True, nullable=False, unique=True)
-    email = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, index=True, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
 
     def to_dict(self):
         return {
-            "id": self.id,
             "username": self.username,
             "email": self.email,
         }
+
+    def __repr__(self):
+        return (
+            '<id: {} username: {} email: {}>'.format(
+                self.id, self.username, self.email
+            )
+        )
+
+
+class Session(db.Model):
+    __tablename__ = 'sessions'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    session_id = db.Column(UUID, index=True, nullable=False, unique=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True
+    )
+    created_at = db.Column(db.Date, nullable=False)
+
+    def to_dict(self):
+        return {
+            "session_id": self.session_id,
+            "created_at": self.created_at,
+        }
+
+    def __repr__(self):
+        return (
+            '<id: {} username: {} email: {}>'.format(
+                self.id, self.username, self.email
+            )
+        )
