@@ -6,5 +6,6 @@ ssh root@euve258483.serverprofi24.net /bin/bash << EOF
     pip install -U -r requirements.txt
     export APP_SETTINGS="config.DevelopmentConfig"
     export DATABASE_URL="postgresql://letsfuk:root@localhost/letsfuk"
+    python manage.py db migrate
     python manage.py db upgrade
 EOF
