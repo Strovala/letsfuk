@@ -59,17 +59,17 @@ class Session(db.Model):
     user_id = db.Column(
         db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True
     )
-    created_at = db.Column(db.Date, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
 
     def to_dict(self):
         return {
             "session_id": self.session_id,
-            "created_at": self.created_at,
+            "expires_at": self.expires_at,
         }
 
     def __repr__(self):
         return (
-            '<id: {} username: {} email: {}>'.format(
-                self.id, self.username, self.email
+            '<id: {} session_id: {} expires_at: {}>'.format(
+                self.id, self.session_id, self.expires_at
             )
         )
