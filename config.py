@@ -7,7 +7,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SESSION_TTL = 1
+    SESSION_TTL = 30
     SECRET_KEY = b'$\\m!\xab\xd6>\xa32\xe09\xf9_\x10\x81\xb9'
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 

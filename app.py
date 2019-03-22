@@ -2,10 +2,12 @@ import datetime
 import os
 import json
 from functools import wraps
+from json import JSONDecodeError
 
 import bcrypt
 import uuid
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, session
+from flask import request as flask_request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 
@@ -17,11 +19,53 @@ db = SQLAlchemy(app)
 from models import User, Session
 
 
+def _make_or_get_request_object(*args):
+    if len(args) > 0:
+        request = args[0]
+    else:
+        request = Request()
+    return request
+
+
+class Request(object):
+    def __init__(self):
+        self.session = None
+        self.body = None
+        self.user = None
+
+
+def resolve_body(**kwargs):
+    def dec(func):
+        @wraps(func)
+        def wrapper(*args, **kw):
+            request = _make_or_get_request_object(*args)
+            try:
+                body = json.loads(flask_request.data)
+            except JSONDecodeError as e:
+                return jsonify("You sent empty payload"), 400
+            request.body = body
+            return func(*args, **kw)
+        return wrapper
+    return dec
+
+
+def resolve_user(**kwargs):
+    def dec(func):
+        @wraps(func)
+        def wrapper(*args, **kw):
+            request = _make_or_get_request_object(*args)
+            user = User.query.filter_by(id=request.session.user_id)
+            request.user = user
+            return func(*args, **kw)
+        return wrapper
+    return dec
+
+
 def check_session(**kwargs):
     def dec(func):
         @wraps(func)
         def wrapper(*args, **kw):
-            session_id = request.headers.get('session-id')
+            session_id = flask_request.headers.get('session-id')
             existing_session = Session.query.filter_by(
                 session_id=session_id
             ).first()
@@ -49,7 +93,9 @@ def check_session(**kwargs):
                         db.session.remove()
                         return jsonify("Error occured :{}".format(e)), 500
                     return jsonify("You are successfully logged out"), 200
-                return func(existing_session, *args, **kw)
+                request = _make_or_get_request_object(*args)
+                request.session = existing_session
+                return func(request, *args, **kw)
             return jsonify("Unauthorized"), 401
         return wrapper
     return dec
@@ -57,7 +103,7 @@ def check_session(**kwargs):
 
 @app.route('/auth/login', methods=["POST"])
 def login():
-    body = json.loads(request.data)
+    body = json.loads(flask_request.data)
     username = body.get("username")
     password = body.get("password")
     if password is None:
@@ -117,8 +163,9 @@ def logout(sess):
 
 
 @app.route('/users', methods=["POST"])
+@resolve_body()
 def register():
-    body = json.loads(request.data)
+    body = json.loads(flask_request.data)
     username = body.get("username")
     password = body.get("password")
     email = body.get("email")
@@ -142,11 +189,22 @@ def register():
 
 @app.route('/users/<username>', methods=["GET"])
 @check_session()
-def get_user_by_username(sess, username):
+def get_user_by_username(request, username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         return jsonify("Entity not found"), 404
     return jsonify(user.to_dict())
+
+
+@app.route('/stations/subscribe', methods=["POST"])
+@check_session()
+@resolve_body()
+@resolve_user()
+def subscribe_to_station(request):
+    lat = request.body.get("lat")
+    lon = request.body.get("lon")
+    if lat is None or lon is None:
+        return jsonify("You need to provide both latitude and longitude"), 400
 
 
 if __name__ == '__main__':
