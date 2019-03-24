@@ -1,4 +1,4 @@
-from app import db
+from letsfuk import db
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
