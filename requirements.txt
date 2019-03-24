@@ -11,6 +11,7 @@ geographiclib==1.49
 geopy==1.18.1
 itsdangerous==1.1.0
 Jinja2==2.10
+-e git+https://github.com/Strovala/letsfuk.git@8dbbcde5f05bc2979ffa01c35a400cf841eb8c92#egg=letsfuk
 Mako==1.0.7
 MarkupSafe==1.1.1
 psycopg2-binary==2.7.7
