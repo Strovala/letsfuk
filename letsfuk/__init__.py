@@ -10,10 +10,14 @@ from tornado_sqlalchemy import make_session_factory
 from letsfuk import ioc
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
-from letsfuk.handlers.users import UsersHandler
+from letsfuk.handlers.users import UsersHandler, UserHandler
 
 define('port', default=8888, help='port to listen on')
 factory = make_session_factory(os.environ.get('DATABASE_URL', ''))
+uuid_regex = (
+    "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}"
+    "\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+)
 
 
 def make_app():
@@ -22,8 +26,10 @@ def make_app():
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/users', UsersHandler),
+        ('/users/(\w+)?', UserHandler),
     ],
-        session_factory=factory
+        session_factory=factory,
+        debug=True
     )
 
 

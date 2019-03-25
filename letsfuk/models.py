@@ -37,7 +37,7 @@ class UserNotFound(Exception):
 class User(object):
     @classmethod
     def validate_username(cls, username):
-        username_regex = '^[a-zA-Z0-9]+([_-]?[a-zA-Z0-9])*$'
+        username_regex = '^\w+$'
         matching = re.match(username_regex, username)
         if not matching or not (3 <= len(username) <= 12):
             raise InvalidUsername()
@@ -103,7 +103,9 @@ class User(object):
         db = inject.instance('db')
         user = DbUser.query_by_username(db, username)
         if user is None:
-            raise UserNotFound()
+            raise UserNotFound(
+                "There is no user with username '{}'".format(username)
+            )
         return user
 
 
