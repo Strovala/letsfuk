@@ -1,18 +1,21 @@
-from letsfuk import db
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Column, UniqueConstraint, DateTime, ForeignKey, Integer, \
+    String
 from sqlalchemy.dialects.postgresql import UUID
+from tornado_sqlalchemy import declarative_base
+
+Base = declarative_base
 
 
-class Station(db.Model):
+class Station(Base):
     __tablename__ = 'stations'
     __table_args__ = (
         UniqueConstraint('latitude', 'longitude', name='location'),
     )
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    station_id = db.Column(UUID, index=True, nullable=True, unique=True)
-    latitude = db.Column(db.String(), nullable=False)
-    longitude = db.Column(db.String(), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    station_id = Column(UUID, index=True, nullable=True, unique=True)
+    latitude = Column(String, nullable=False)
+    longitude = Column(String, nullable=False)
 
     def to_dict(self):
         return {
@@ -29,13 +32,13 @@ class Station(db.Model):
         )
 
 
-class User(db.Model):
+class User(Base):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String, index=True, nullable=False, unique=True)
-    email = db.Column(db.String, index=True, nullable=False, unique=True)
-    password = db.Column(db.String, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, index=True, nullable=False, unique=True)
+    email = Column(String, index=True, nullable=False, unique=True)
+    password = Column(String, nullable=False)
 
     def to_dict(self):
         return {
@@ -51,15 +54,15 @@ class User(db.Model):
         )
 
 
-class Session(db.Model):
+class Session(Base):
     __tablename__ = 'sessions'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    session_id = db.Column(UUID, index=True, nullable=False, unique=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(UUID, index=True, nullable=False, unique=True)
+    user_id = Column(
+        Integer, ForeignKey('users.id'), nullable=False, unique=True
     )
-    expires_at = db.Column(db.DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
 
     def to_dict(self):
         return {
