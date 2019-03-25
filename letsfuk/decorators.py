@@ -6,6 +6,7 @@ from json import JSONDecodeError
 import inject
 from sqlalchemy.exc import IntegrityError
 
+from config import Config
 from letsfuk.db.models import Session, User
 from letsfuk.errors import HttpException, InternalError
 
@@ -87,8 +88,8 @@ def check_session(**kwargs):
                 # Check if session is expired
                 now = datetime.datetime.now()
                 if now < existing_session.expires_at:
-                    # TODO: make config file
-                    session_ttl = 30
+                    config = inject.instance(Config)
+                    session_ttl = config.get('session_ttl', 30)
                     expires_at = now + datetime.timedelta(minutes=session_ttl)
                     _ = Session.update_expiring(
                         db, existing_session, expires_at

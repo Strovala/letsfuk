@@ -1,30 +1,19 @@
+import io
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+import yaml
+
+base_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class Config(object):
-    DEBUG = False
-    TESTING = False
-    CSRF_ENABLED = True
-    SESSION_TTL = 30
-    SECRET_KEY = b'$\\m!\xab\xd6>\xa32\xe09\xf9_\x10\x81\xb9'
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    def __init__(self, file):
+        path = os.path.join(base_dir, file)
+        with io.open(path, 'r') as stream:
+            try:
+                self.data = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                raise exc
 
-
-class ProductionConfig(Config):
-    DEBUG = False
-
-
-class StagingConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = True
-
-
-class DevelopmentConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = True
-
-
-class TestingConfig(Config):
-    TESTING = True
+    def get(self, key, default=None):
+        return self.data.get(key, default)

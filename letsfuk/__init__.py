@@ -7,13 +7,13 @@ from tornado.options import define, options
 from tornado.web import Application
 from tornado_sqlalchemy import make_session_factory
 
+from config import Config
 from letsfuk import ioc
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
 
 define('port', default=8888, help='port to listen on')
-factory = make_session_factory(os.environ.get('DATABASE_URL', ''))
 uuid_regex = (
     "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}"
     "\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
@@ -21,6 +21,10 @@ uuid_regex = (
 
 
 def make_app():
+    config = inject.instance(Config)
+    debug = config.get('debug')
+    database_url = config.get('database_url')
+    factory = make_session_factory(database_url)
     return Application([
         ('/', InfoView),
         ('/auth/login', LoginHandler),
@@ -29,7 +33,7 @@ def make_app():
         ('/users/(\w+)?', UserHandler),
     ],
         session_factory=factory,
-        debug=True
+        debug=debug
     )
 
 

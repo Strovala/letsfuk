@@ -6,6 +6,7 @@ import bcrypt
 import inject
 from sqlalchemy.exc import IntegrityError
 
+from config import Config
 from letsfuk.db.models import User as DbUser, Session
 
 
@@ -139,8 +140,8 @@ class Auth(object):
                 "session_id": existing_session.session_id
             }
         session_id = str(uuid.uuid4())
-        # TODO: make config file
-        session_ttl = 30
+        config = inject.instance(Config)
+        session_ttl = config.get('session_ttl', 30)
         now = datetime.datetime.now()
         expires_at = now + datetime.timedelta(minutes=session_ttl)
         _ = Session.add(db, session_id, user.id, expires_at)
