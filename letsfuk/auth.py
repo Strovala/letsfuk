@@ -1,10 +1,8 @@
-import datetime
-
-import bcrypt
 import uuid
+import bcrypt
+import datetime
 from flask import Blueprint, jsonify
 from sqlalchemy.exc import IntegrityError
-
 from letsfuk import app, db
 from letsfuk.decorators import check_session, resolve_body, view_wrapper
 from letsfuk.database.models import User, Session
