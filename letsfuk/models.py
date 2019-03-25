@@ -75,11 +75,15 @@ class User(object):
         email = payload.get("email")
         password = payload.get("password")
         # Check if user with given username already exists
-        existing_user = db.query(DbUser).filter(
-            DbUser.username == username
-        ).first()
+        existing_user = DbUser.query_by_username(db, username)
         if existing_user is not None:
             raise UserAlreadyExists("User with given username already exists")
+        else:
+            existing_user = DbUser.query_by_email(db, email)
+            if existing_user is not None:
+                raise UserAlreadyExists(
+                    "User with given email already exists"
+                )
         encoded_password = password.encode()
         hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
         decoded_hashed_password = hashed_password.decode()

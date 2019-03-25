@@ -17,18 +17,19 @@ class Request(object):
         self.user = None
 
 
-def error_handler(**kwargs):
+def endpoint_wrapper(**kwargs):
     def dec(func):
         @wraps(func)
         def wrapper(self, *args, **kw):
             try:
-                return func(self, *args, **kw)
+                response, status_code = func(self, *args, **kw)
             except HttpException as e:
                 response = {
                     "status_code": e.status_code,
                     "text": e.text
                 }
-                return self.send_response(response, e.status_code)
+                status_code = e.status_code
+            self.send_response(response, status_code)
         return wrapper
     return dec
 
@@ -56,7 +57,7 @@ def resolve_body(**kwargs):
             try:
                 body = json.loads(self.request.body)
             except JSONDecodeError as e:
-                return self.send_response("You sent empty payload", 400)
+                return "You sent empty payload", 400
             self.request.body = body
             return func(self, *args, **kw)
         return wrapper
@@ -96,12 +97,9 @@ def check_session(**kwargs):
                 else:
                     # logout logic
                     Session.delete(db, existing_session)
-                    self.send_response(
-                        "You are successfully logged out", 200
-                    )
-                    return
+                    return "You are successfully logged out", 200
                 self.request.session = existing_session
                 return func(self, *args, **kw)
-            self.send_response("Unauthorized", 401)
+            return "Unauthorized", 401
         return wrapper
     return dec
