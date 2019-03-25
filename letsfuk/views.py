@@ -1,45 +1,49 @@
-from flask import jsonify
-from sqlalchemy.exc import IntegrityError
+import json
 
-from letsfuk import app
-from letsfuk.decorators import (
-    check_session, resolve_body, resolve_user, view_wrapper,
-    map_exception
-)
-from letsfuk.errors import BadRequest, InternalError, Conflict, NotFound
-from letsfuk.models import (
-    User, InvalidRegistrationPayload, UserNotFound, UserAlreadyExists
-)
+from tornado.web import RequestHandler
+from tornado_sqlalchemy import SessionMixin
 
 
-@app.route('/users', methods=["POST"])
-@view_wrapper()
-@map_exception(out_of=InvalidRegistrationPayload, make=BadRequest)
-@map_exception(out_of=UserAlreadyExists, make=Conflict)
-@map_exception(out_of=IntegrityError, make=InternalError)
-@resolve_body()
-def register(request):
-    User.validate_registration_payload(request.body)
-    user = User.add(request.body)
-    return jsonify(user.to_dict()), 201
+class BaseView(RequestHandler, SessionMixin):
+    """Base view for this application."""
+    def prepare(self):
+        self.form_data = {
+            key: [val.decode('utf8') for val in val_list]
+            for key, val_list in self.request.arguments.items()
+        }
+
+    def set_default_headers(self):
+        """Set the default response header to be JSON."""
+        self.set_header("Content-Type", 'application/json; charset="utf-8"')
+
+    def send_response(self, data, status=200):
+        """Construct and send a JSON response with appropriate status code."""
+        self.set_status(status)
+        self.write(json.dumps(data))
 
 
-@app.route('/users/<username>', methods=["GET"])
-@view_wrapper()
-@map_exception(out_of=UserNotFound, make=NotFound)
-@check_session()
-def get_user_by_username(request, username):
-    user = User.get(username)
-    return jsonify(user.to_dict())
+class InfoView(BaseView):
+    """Only allow GET requests."""
+    SUPPORTED_METHODS = ["GET"]
 
+    def set_default_headers(self):
+        """Set the default response header to be JSON."""
+        self.set_header("Content-Type", 'application/json; charset="utf-8"')
 
-@app.route('/stations/subscribe', methods=["POST"])
-@view_wrapper()
-@check_session()
-@resolve_body()
-@resolve_user()
-def subscribe_to_station(request):
-    lat = request.body.get("lat")
-    lon = request.body.get("lon")
-    if lat is None or lon is None:
-        return jsonify("You need to provide both latitude and longitude"), 400
+    def get(self):
+        """List of routes for this API."""
+        routes = {
+            'info': 'GET /api/v1',
+            'register': 'POST /api/v1/accounts',
+            'single profile detail': 'GET /api/v1/accounts/<username>',
+            'edit profile': 'PUT /api/v1/accounts/<username>',
+            'delete profile': 'DELETE /api/v1/accounts/<username>',
+            'login': 'POST /api/v1/accounts/login',
+            'logout': 'GET /api/v1/accounts/logout',
+            "user's tasks": 'GET /api/v1/accounts/<username>/tasks',
+            "create task": 'POST /api/v1/accounts/<username>/tasks',
+            "task detail": 'GET /api/v1/accounts/<username>/tasks/<id>',
+            "task update": 'PUT /api/v1/accounts/<username>/tasks/<id>',
+            "delete task": 'DELETE /api/v1/accounts/<username>/tasks/<id>'
+        }
+        self.write(json.dumps(routes))

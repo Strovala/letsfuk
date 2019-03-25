@@ -1,15 +1,32 @@
 import os
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+from tornado.options import define, options
+from tornado.web import Application
+from tornado_sqlalchemy import make_session_factory
+
+from letsfuk.views import InfoView
+
+define('port', default=8888, help='port to listen on')
+factory = make_session_factory(os.environ.get('DATABASE_URL', ''))
 
 
-app = Flask(__name__)
-app.config.from_object(os.environ['APP_SETTINGS'])
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+def make_app():
+    return Application([
+        ('/', InfoView)
+    ],
+        session_factory=factory
+    )
 
-from letsfuk.auth import auth
-import letsfuk.views
+
+def main():
+    """Construct and serve the tornado application."""
+    app = make_app()
+    http_server = HTTPServer(app)
+    http_server.listen(options.port)
+    print('Listening on http://localhost:%i' % options.port)
+    IOLoop.current().start()
 
 
-app.register_blueprint(auth, url_prefix='/auth')
+main()
