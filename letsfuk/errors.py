@@ -23,5 +23,3 @@ class Conflict(HttpException):
 class InternalError(HttpException):
     def __init__(self, text):
         super(InternalError, self).__init__(text, 500)
-
-

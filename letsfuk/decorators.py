@@ -3,12 +3,11 @@ import json
 from functools import wraps
 from json import JSONDecodeError
 
-from flask import request as flask_request, jsonify
+import inject
 from sqlalchemy.exc import IntegrityError
 
-from letsfuk import app, db
-from letsfuk.database.models import Session, User
-from letsfuk.errors import HttpException
+from letsfuk.db.models import Session, User
+from letsfuk.errors import HttpException, InternalError
 
 
 class Request(object):
@@ -18,19 +17,18 @@ class Request(object):
         self.user = None
 
 
-def view_wrapper(**kwargs):
+def error_handler(**kwargs):
     def dec(func):
         @wraps(func)
-        def wrapper(*args, **kw):
-            request = Request()
+        def wrapper(self, *args, **kw):
             try:
-                return func(request, *args, **kw)
+                return func(self, *args, **kw)
             except HttpException as e:
                 response = {
                     "status_code": e.status_code,
                     "text": e.text
                 }
-                return jsonify(response), e.status_code
+                return self.send_response(response, e.status_code)
         return wrapper
     return dec
 
@@ -54,13 +52,13 @@ def map_exception(**kwargs):
 def resolve_body(**kwargs):
     def dec(func):
         @wraps(func)
-        def wrapper(request, *args, **kw):
+        def wrapper(self, *args, **kw):
             try:
-                body = json.loads(flask_request.data)
+                body = json.loads(self.request.body)
             except JSONDecodeError as e:
-                return jsonify("You sent empty payload"), 400
-            request.body = body
-            return func(request, *args, **kw)
+                return self.send_response("You sent empty payload", 400)
+            self.request.body = body
+            return func(self, *args, **kw)
         return wrapper
     return dec
 
@@ -68,10 +66,10 @@ def resolve_body(**kwargs):
 def resolve_user(**kwargs):
     def dec(func):
         @wraps(func)
-        def wrapper(request, *args, **kw):
-            user = User.query.filter_by(id=request.session.user_id)
-            request.user = user
-            return func(request, *args, **kw)
+        def wrapper(self, *args, **kw):
+            user = User.query.filter_by(id=self.request.session.user_id)
+            self.request.user = user
+            return func(self, *args, **kw)
         return wrapper
     return dec
 
@@ -79,37 +77,31 @@ def resolve_user(**kwargs):
 def check_session(**kwargs):
     def dec(func):
         @wraps(func)
-        def wrapper(request, *args, **kw):
-            session_id = flask_request.headers.get('session-id')
-            existing_session = Session.query.filter_by(
-                session_id=session_id
-            ).first()
+        @map_exception(out_of=IntegrityError, make=InternalError)
+        def wrapper(self, *args, **kw):
+            db = inject.instance('db')
+            session_id = self.request.headers.get('session-id')
+            existing_session = Session.query_by_session_id(db, session_id)
             if existing_session is not None:
                 # Check if session is expired
                 now = datetime.datetime.now()
                 if now < existing_session.expires_at:
-                    session_ttl = app.config.get('SESSION_TTL', 30)
+                    # TODO: make config file
+                    session_ttl = 30
                     expires_at = now + datetime.timedelta(minutes=session_ttl)
-                    existing_session.expires_at = expires_at
-                    try:
-                        db.session.commit()
-                    except IntegrityError as e:
-                        db.session.rollback()
-                        db.session.remove()
-                        return jsonify("Error occured :{}".format(e)), 500
+                    _ = Session.update_expiring(
+                        db, existing_session, expires_at
+                    )
                 # session is expired
                 else:
                     # logout logic
-                    db.session.delete(existing_session)
-                    try:
-                        db.session.commit()
-                    except IntegrityError as e:
-                        db.session.rollback()
-                        db.session.remove()
-                        return jsonify("Error occured :{}".format(e)), 500
-                    return jsonify("You are successfully logged out"), 200
-                request.session = existing_session
-                return func(request, *args, **kw)
-            return jsonify("Unauthorized"), 401
+                    Session.delete(db, existing_session)
+                    self.send_response(
+                        "You are successfully logged out", 200
+                    )
+                    return
+                self.request.session = existing_session
+                return func(self, *args, **kw)
+            self.send_response("Unauthorized", 401)
         return wrapper
     return dec

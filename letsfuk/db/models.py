@@ -1,9 +1,11 @@
-from sqlalchemy import Column, UniqueConstraint, DateTime, ForeignKey, Integer, \
-    String
+from sqlalchemy import (
+    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String,
+    create_engine)
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.exc import IntegrityError
 from tornado_sqlalchemy import declarative_base
 
-Base = declarative_base
+Base = declarative_base()
 
 
 class Station(Base):
@@ -40,6 +42,18 @@ class User(Base):
     email = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
 
+    @classmethod
+    def query_by_username(cls, db, username):
+        return db.query(cls).filter(
+            cls.username == username
+        ).first()
+
+    @classmethod
+    def query_by_email(cls, db, email):
+        return db.query(cls).filter(
+            cls.email == email
+        ).first()
+
     def to_dict(self):
         return {
             "username": self.username,
@@ -64,6 +78,53 @@ class Session(Base):
     )
     expires_at = Column(DateTime, nullable=False)
 
+    @classmethod
+    def update_expiring(cls, db, session, expires_at):
+        session.expires_at = expires_at
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return session
+
+    @classmethod
+    def add(cls, db, session_id, user_id, expires_at):
+        sess = cls(
+            session_id=session_id,
+            user_id=user_id,
+            expires_at=expires_at
+        )
+        db.add(sess)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return sess
+
+    @classmethod
+    def delete(cls, db, session):
+        db.delete(session)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return session
+
+    @classmethod
+    def query_by_user_id(cls, db, user_id):
+        return db.query(cls).filter(
+            cls.user_id == user_id
+        ).first()
+
+    @classmethod
+    def query_by_session_id(cls, db, session_id):
+        return db.query(cls).filter(
+            cls.session_id == session_id
+        ).first()
+
     def to_dict(self):
         return {
             "session_id": self.session_id,
@@ -76,3 +137,7 @@ class Session(Base):
                 self.id, self.session_id, self.expires_at
             )
         )
+
+#
+# db_engine = create_engine("postgresql://letsfuk:root@localhost/letsfuk")
+# Base.metadata.create_all(db_engine)

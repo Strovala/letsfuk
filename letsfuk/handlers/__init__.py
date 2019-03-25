@@ -4,13 +4,8 @@ from tornado.web import RequestHandler
 from tornado_sqlalchemy import SessionMixin
 
 
-class BaseView(RequestHandler, SessionMixin):
+class BaseHandler(RequestHandler, SessionMixin):
     """Base view for this application."""
-    def prepare(self):
-        self.form_data = {
-            key: [val.decode('utf8') for val in val_list]
-            for key, val_list in self.request.arguments.items()
-        }
 
     def set_default_headers(self):
         """Set the default response header to be JSON."""
@@ -18,11 +13,15 @@ class BaseView(RequestHandler, SessionMixin):
 
     def send_response(self, data, status=200):
         """Construct and send a JSON response with appropriate status code."""
+        if isinstance(data, str):
+            data = {
+                "message": data
+            }
         self.set_status(status)
         self.write(json.dumps(data))
 
 
-class InfoView(BaseView):
+class InfoView(BaseHandler):
     """Only allow GET requests."""
     SUPPORTED_METHODS = ["GET"]
 

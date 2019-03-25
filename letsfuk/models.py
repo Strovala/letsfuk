@@ -1,10 +1,12 @@
+import datetime
 import re
+import uuid
 
 import bcrypt
+import inject
 from sqlalchemy.exc import IntegrityError
 
-from letsfuk import db
-from letsfuk.database.models import User as DbUser
+from letsfuk.db.models import User as DbUser, Session
 
 
 class InvalidRegistrationPayload(Exception):
@@ -68,31 +70,80 @@ class User(object):
 
     @classmethod
     def add(cls, payload):
+        db = inject.instance('db')
         username = payload.get("username")
         email = payload.get("email")
         password = payload.get("password")
         # Check if user with given username already exists
-        existing_user = DbUser.query.filter_by(username=username).first()
+        existing_user = db.query(DbUser).filter(
+            DbUser.username == username
+        ).first()
         if existing_user is not None:
-            raise UserAlreadyExists()
+            raise UserAlreadyExists("User with given username already exists")
         encoded_password = password.encode()
         hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
         decoded_hashed_password = hashed_password.decode()
         user = DbUser(
             username=username, password=decoded_hashed_password, email=email
         )
-        db.session.add(user)
+        db.add(user)
         try:
-            db.session.commit()
+            db.commit()
         except IntegrityError as e:
-            db.session.rollback()
-            db.session.remove()
+            db.rollback()
             raise e
         return user
 
     @classmethod
     def get(cls, username):
-        user = DbUser.query.filter_by(username=username).first()
+        db = inject.instance('db')
+        user = DbUser.query_by_username(db, username)
         if user is None:
             raise UserNotFound()
         return user
+
+
+class WrongCredentials(Exception):
+    pass
+
+
+class Auth(object):
+    @classmethod
+    def login(cls, payload):
+        db = inject.instance('db')
+        username = payload.get("username")
+        password = payload.get("password", "")
+        email = payload.get("email")
+        user = None
+        if email is not None:
+            user = DbUser.query_by_email(db, email)
+        elif username is not None:
+            user = DbUser.query_by_username(db, username)
+        if user is None:
+            raise WrongCredentials("Wrong username/email or password")
+        encoded_password = password.encode()
+        encoded_hashed_password = user.password.encode()
+        matching = bcrypt.checkpw(encoded_password, encoded_hashed_password)
+        if not matching:
+            raise WrongCredentials("Wrong username/email or password")
+        existing_session = Session.query_by_user_id(db, user.id)
+        if existing_session is not None:
+            return {
+                "user": user.to_dict(),
+                "session_id": existing_session.session_id
+            }
+        session_id = str(uuid.uuid4())
+        # TODO: make config file
+        session_ttl = 30
+        now = datetime.datetime.now()
+        expires_at = now + datetime.timedelta(minutes=session_ttl)
+        _ = Session.add(db, session_id, user.id, expires_at)
+        return {
+            "user": user.to_dict(),
+            "session_id": session_id
+        }
+
+    @classmethod
+    def logout(cls, session):
+        db = inject.instance('db')
+        _ = Session.delete(db, session)
