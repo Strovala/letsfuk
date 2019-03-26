@@ -10,12 +10,14 @@ class TestUsers(BaseAsyncHTTPTestCase):
             email=self.generator.email.generate(),
         )
         session_id = user.get('session_id')
+        lat = self.generator.latitude.generate()
+        lon = self.generator.longitude.generate()
         body = {
-            "lat": self.generator.latitude.generate(),
-            "lon": self.generator.longitude.generate()
+            "lat": lat,
+            "lon": lon
         }
         response = self.fetch(
-            '/users',
+            '/stations/subscribe',
             method="POST",
             body=json.dumps(body).encode('utf-8'),
             headers={
@@ -24,5 +26,5 @@ class TestUsers(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        self.assertEqual("random_username", response_body.get('username'))
-
+        self.assertEqual(lat, response_body.get('lat'))
+        self.assertEqual(lon, response_body.get('lon'))
