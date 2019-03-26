@@ -89,19 +89,17 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         Base.metadata.drop_all(bind=engine)
         inject.clear()
 
-    def ensure_register(
-            self, username="random_username",
-            password="Test123!", email="random_mail@gmail.com"
-    ):
+    def ensure_register(self, username=None, password="Test123!", email=None):
+        if username is None:
+            username = self.generator.username.generate()
+        if email is None:
+            email = self.generator.email.generate()
         bcrypted_password = UserModel.bcrypt_password(password)
         db = inject.instance('db')
         user = User.add(db, username, email, bcrypted_password)
         return user
 
-    def ensure_login(
-            self, username="random_username",
-            password="Test123!", email="random_mail@gmail.com"
-    ):
+    def ensure_login(self, username=None, password="Test123!", email=None):
         db = inject.instance('db')
         registered_user = self.ensure_register(
             username=username, password=password, email=email

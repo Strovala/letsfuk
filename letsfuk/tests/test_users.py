@@ -80,15 +80,9 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_get_user(self):
-        session = self.ensure_login(
-            username=self.generator.username.generate(),
-            email=self.generator.email.generate()
-        )
+        session = self.ensure_login()
         session_id = session.session_id
-        another_user = self.ensure_register(
-            username=self.generator.username.generate(),
-            email=self.generator.email.generate()
-        )
+        another_user = self.ensure_register()
         response = self.fetch(
             '/users/{}'.format(another_user.username),
             method="GET",
@@ -101,10 +95,7 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(another_user.username, response_body.get('username'))
 
     def test_get_user_unauthorized(self):
-        another_user = self.ensure_register(
-            username=self.generator.username.generate(),
-            email=self.generator.email.generate()
-        )
+        another_user = self.ensure_register()
         response = self.fetch(
             '/users/{}'.format(another_user.username),
             method="GET",
