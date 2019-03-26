@@ -40,3 +40,11 @@ class Station(object):
         station_id = str(uuid.uuid4())
         station = DbStation.add(db, station_id, lat, lon)
         return station
+
+    @classmethod
+    def get_closest(cls, payload):
+        lat = payload.get('lat')
+        lon = payload.get('lon')
+        db = inject.instance('db')
+        station = DbStation.get_closest(db, lat, lon)
+        return station

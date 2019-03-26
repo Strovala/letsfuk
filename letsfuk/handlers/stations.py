@@ -18,5 +18,10 @@ class StationsHandler(BaseHandler):
 
 
 class SubscribeHandler(BaseHandler):
+    @endpoint_wrapper()
+    @check_session()
+    @resolve_body()
     def post(self):
-        pass
+        Station.validate_location(self.request.body)
+        station = Station.get_closest(self.request.body)
+        return station.to_dict(), 200

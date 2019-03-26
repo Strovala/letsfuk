@@ -1,8 +1,10 @@
 from sqlalchemy import (
-    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Float
+    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Float,
+    func
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.hybrid import hybrid_method
 from tornado_sqlalchemy import declarative_base
 
 Base = declarative_base()
@@ -39,6 +41,22 @@ class Station(Base):
         except IntegrityError as e:
             db.rollback()
             raise e
+        return station
+
+    @hybrid_method
+    def distance(self, lat, lon):
+        return func.sqrt(
+            (self.latitude - lat)*(self.latitude - lat) +
+            (self.longitude - lon)*(self.longitude - lon)
+        )
+
+    @classmethod
+    def get_closest(cls, db, lat, lon):
+        lat = cls.round_value(lat)
+        lon = cls.round_value(lon)
+        station = db.query(
+            cls
+        ).group_by(cls.id).order_by(cls.distance(lat, lon)).first()
         return station
 
     def to_dict(self):
