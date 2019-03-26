@@ -5,11 +5,11 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 
 class TestUsers(BaseAsyncHTTPTestCase):
     def test_add_station(self):
-        user = self.ensure_login(
+        session = self.ensure_login(
             username=self.generator.username.generate(),
             email=self.generator.email.generate(),
         )
-        session_id = user.get('session_id')
+        session_id = session.session_id
         lat = self.generator.latitude.generate()
         lon = self.generator.longitude.generate()
         body = {
@@ -32,3 +32,6 @@ class TestUsers(BaseAsyncHTTPTestCase):
         longitude = float(response_longitude)
         self.assertEqual(lat, latitude)
         self.assertEqual(lon, longitude)
+
+    def test_subscribe(self):
+        stations = self.ensure_stations()

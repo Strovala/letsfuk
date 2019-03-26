@@ -1,12 +1,14 @@
+import uuid
 from random import choice, uniform
 
+import datetime
 import inject
-import json
 
 import letsfuk
 from tornado.testing import AsyncHTTPTestCase
 
-from letsfuk.db.models import Base
+from letsfuk.db.models import Base, Station, User, Session
+from letsfuk.models.user import User as UserModel
 from letsfuk.ioc import testing_configuration
 
 
@@ -91,36 +93,44 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             self, username="random_username",
             password="Test123!", email="random_mail@gmail.com"
     ):
-        body = {
-            "username": username,
-            "password": password,
-            "email": email,
-        }
-        response = self.fetch(
-            '/users',
-            method="POST",
-            body=json.dumps(body).encode('utf-8')
-        )
-        self.assertEqual(response.code, 201)
-        response_body = json.loads(response.body.decode())
-        return response_body
+        bcrypted_password = UserModel.bcrypt_password(password)
+        db = inject.instance('db')
+        user = User.add(db, username, email, bcrypted_password)
+        return user
 
     def ensure_login(
             self, username="random_username",
             password="Test123!", email="random_mail@gmail.com"
     ):
+        db = inject.instance('db')
         registered_user = self.ensure_register(
             username=username, password=password, email=email
         )
-        body = {
-            "username": registered_user["username"],
-            "password": password,
-        }
-        response = self.fetch(
-            '/auth/login',
-            method="POST",
-            body=json.dumps(body).encode('utf-8')
-        )
-        self.assertEqual(response.code, 200)
-        response_body = json.loads(response.body.decode())
-        return response_body
+        session_id = str(uuid.uuid4())
+        now = datetime.datetime.now()
+        expires_at = now + datetime.timedelta(minutes=300)
+        session = Session.add(db, session_id, registered_user.id, expires_at)
+        return session
+
+    def add_station(self, lat=0, lon=0):
+        db = inject.instance('db')
+        station_id = str(uuid.uuid4())
+        station = Station.add(db, station_id, lat, lon)
+        return station
+
+    def ensure_stations(self):
+        """
+        Add 9 stations
+            * * *
+            * * *
+            * * *
+        """
+        stations = [
+            self.add_station(-45, 45), self.add_station(0, 45),
+            self.add_station(45, 45),
+            self.add_station(-45, 0), self.add_station(0, 0),
+            self.add_station(45, 0),
+            self.add_station(-45, -45), self.add_station(0, -45),
+            self.add_station(45, -45),
+        ]
+        return stations

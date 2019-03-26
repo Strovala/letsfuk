@@ -7,7 +7,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         body = {
-            "username": registered_user["username"],
+            "username": registered_user.username,
             "password": password
         }
         response = self.fetch(
@@ -19,7 +19,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         user = response_body.get('user', dict())
         username = user.get('username')
-        self.assertEqual(registered_user["username"], username)
+        self.assertEqual(registered_user.username, username)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
@@ -27,7 +27,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         body = {
-            "email": registered_user["email"],
+            "email": registered_user.email,
             "password": password
         }
         response = self.fetch(
@@ -39,7 +39,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         user = response_body.get('user', dict())
         email = user.get('email')
-        self.assertEqual(registered_user["email"], email)
+        self.assertEqual(registered_user.email, email)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
@@ -87,7 +87,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         body = {
-            "username": registered_user["username"],
+            "username": registered_user.username,
             "password": "nas je kole jeb'o toroman"
         }
         response = self.fetch(

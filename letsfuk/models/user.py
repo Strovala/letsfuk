@@ -2,7 +2,6 @@ import re
 
 import bcrypt
 import inject
-from sqlalchemy.exc import IntegrityError
 
 from letsfuk.db.models import User as DbUser
 
@@ -20,6 +19,13 @@ class UserNotFound(Exception):
 
 
 class User(object):
+    @classmethod
+    def bcrypt_password(cls, password):
+        encoded_password = password.encode()
+        hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
+        decoded_hashed_password = hashed_password.decode()
+        return decoded_hashed_password
+
     @classmethod
     def validate_username(cls, username):
         username_regex = '^\w+$'
@@ -69,10 +75,8 @@ class User(object):
                 raise UserAlreadyExists(
                     "User with given email already exists"
                 )
-        encoded_password = password.encode()
-        hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
-        decoded_hashed_password = hashed_password.decode()
-        user = DbUser.add(db, username, email, decoded_hashed_password)
+        bcrypted_password = cls.bcrypt_password(password)
+        user = DbUser.add(db, username, email, bcrypted_password)
         return user
 
     @classmethod
