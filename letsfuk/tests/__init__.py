@@ -3,6 +3,7 @@ from random import choice, uniform
 
 import datetime
 import inject
+from math import sqrt
 
 import letsfuk
 from tornado.testing import AsyncHTTPTestCase
@@ -71,6 +72,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
     def setUp(self):
         super(BaseAsyncHTTPTestCase, self).setUp()
         engine = inject.instance('db_engine')
+        Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(engine)
         self.generator = GeneratorPool()
 
@@ -132,3 +134,24 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             self.add_station(wide, -wide),
         ]
         return stations
+
+    def closest_station(self, stations, lat, lon):
+        # sqrt((x1-x2)^2 +(y1-y2)^2) distance between two points
+        closest_station_index = 0
+        station = stations[closest_station_index]
+        minimal_distance = sqrt(
+            (station.latitude - lat)*(station.latitude - lat) +
+            (station.longitude - lon)*(station.longitude - lon)
+        )
+
+        for i in range(1, len(stations)):
+            station = stations[i]
+            distance = sqrt(
+                (station.latitude - lat)*(station.latitude - lat) +
+                (station.longitude - lon)*(station.longitude - lon)
+            )
+            if distance < minimal_distance:
+                minimal_distance = distance
+                closest_station_index = i
+        closest_station = stations[closest_station_index]
+        return closest_station

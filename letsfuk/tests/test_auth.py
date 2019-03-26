@@ -43,7 +43,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
-    def test_login_not_registred(self):
+    def test_login_not_registered(self):
         body = {
             "username": "random_username",
             "password": "secret"

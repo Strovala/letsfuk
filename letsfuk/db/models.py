@@ -1,6 +1,6 @@
 from sqlalchemy import (
-    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String,
-    create_engine)
+    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Float
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError
 from tornado_sqlalchemy import declarative_base
@@ -16,8 +16,8 @@ class Station(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     station_id = Column(UUID, index=True, nullable=False, unique=True)
-    latitude = Column(String, index=True, nullable=False)
-    longitude = Column(String, index=True, nullable=False)
+    latitude = Column(Float, index=True, nullable=False)
+    longitude = Column(Float, index=True, nullable=False)
 
     @classmethod
     def add(cls, db, station_id, lat, lon):

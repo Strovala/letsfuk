@@ -3,7 +3,7 @@ import json
 from letsfuk.tests import BaseAsyncHTTPTestCase
 
 
-class TestUsers(BaseAsyncHTTPTestCase):
+class TestStations(BaseAsyncHTTPTestCase):
     def test_add_station(self):
         session = self.ensure_login()
         session_id = session.session_id
@@ -72,3 +72,20 @@ class TestUsers(BaseAsyncHTTPTestCase):
         stations = self.ensure_stations(45)
         session = self.ensure_login()
         session_id = session.session_id
+        lat = self.generator.latitude.generate()
+        lon = self.generator.longitude.generate()
+        body = {
+            "lat": lat,
+            "lon": lon
+        }
+        response = self.fetch(
+            '/stations',
+            method="POST",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session_id
+            }
+        )
+        response_body = json.loads(response.body.decode())
+        station = self.closest_station(stations, lat, lon)
+        self.assertEqual(station.station_id, response_body.get('station_id'))

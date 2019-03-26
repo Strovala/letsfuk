@@ -4,10 +4,12 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 
 class TestUsers(BaseAsyncHTTPTestCase):
     def test_register(self):
+        username = self.generator.username.generate()
+        email = self.generator.email.generate()
         body = {
-            "username": "random_username",
+            "username": username,
             "password": "secret",
-            "email": "random_mail@gmail.com",
+            "email": email,
         }
         response = self.fetch(
             '/users',
@@ -16,7 +18,8 @@ class TestUsers(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 201)
         response_body = json.loads(response.body.decode())
-        self.assertEqual("random_username", response_body.get('username'))
+        self.assertEqual(username, response_body.get('username'))
+        self.assertEqual(email, response_body.get('email'))
 
     def test_register_username_not_valid(self):
         body = {
