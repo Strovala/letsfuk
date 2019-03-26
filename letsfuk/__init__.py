@@ -41,6 +41,7 @@ def make_app():
 def migrate():
     inject.configure(ioc.configuration)
     engine = inject.instance('db_engine')
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(engine)
     print("Migration successful!")
 
