@@ -1,5 +1,6 @@
 import json
 
+from letsfuk.db.models import Station
 from letsfuk.tests import BaseAsyncHTTPTestCase
 
 
@@ -23,12 +24,10 @@ class TestStations(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        response_latitude = response_body.get('latitude')
-        latitude = float(response_latitude)
-        response_longitude = response_body.get('longitude')
-        longitude = float(response_longitude)
-        self.assertEqual(lat, latitude)
-        self.assertEqual(lon, longitude)
+        latitude = response_body.get('latitude')
+        longitude = response_body.get('longitude')
+        self.assertEqual(Station.round_value(lat), latitude)
+        self.assertEqual(Station.round_value(lon), longitude)
 
     def test_add_station_invalid_lat(self):
         session = self.ensure_login()
@@ -79,7 +78,7 @@ class TestStations(BaseAsyncHTTPTestCase):
             "lon": lon
         }
         response = self.fetch(
-            '/stations',
+            '/stations/subscribe',
             method="POST",
             body=json.dumps(body).encode('utf-8'),
             headers={

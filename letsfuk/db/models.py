@@ -20,7 +20,14 @@ class Station(Base):
     longitude = Column(Float, index=True, nullable=False)
 
     @classmethod
+    def round_value(cls, value, decimal_points=6):
+        value = float("{0:.{1}f}".format(value, decimal_points))
+        return value
+
+    @classmethod
     def add(cls, db, station_id, lat, lon):
+        lat = cls.round_value(lat)
+        lon = cls.round_value(lon)
         station = cls(
             station_id=station_id,
             latitude=lat,
