@@ -32,5 +32,3 @@ class TestUsers(BaseAsyncHTTPTestCase):
         longitude = float(response_longitude)
         self.assertEqual(lat, latitude)
         self.assertEqual(lon, longitude)
-
-    def test_subscribe(self):
