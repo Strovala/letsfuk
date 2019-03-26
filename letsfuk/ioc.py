@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 import testing.postgresql
-from config import Config
+from letsfuk.config import Config
 
 
 def configuration(binder):

@@ -4,6 +4,5 @@ ssh root@euve258483.serverprofi24.net /bin/bash << EOF
     git fetch
     git pull
     pip install -U -r requirements.txt
-    export DATABASE_URL="postgresql://letsfuk:root@localhost/letsfuk"
     python -m letsfuk
 EOF

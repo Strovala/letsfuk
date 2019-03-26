@@ -1,5 +1,4 @@
-import os
-
+import argparse
 import inject
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -7,8 +6,9 @@ from tornado.options import define, options
 from tornado.web import Application
 from tornado_sqlalchemy import make_session_factory
 
-from config import Config
 from letsfuk import ioc
+from letsfuk.config import Config
+from letsfuk.db.models import Base
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
@@ -36,6 +36,13 @@ def make_app():
     )
 
 
+def migrate():
+    inject.configure(ioc.configuration)
+    engine = inject.instance('db_engine')
+    Base.metadata.create_all(engine)
+    print("Migration successful!")
+
+
 def main():
     """Construct and serve the tornado application."""
     inject.configure(ioc.configuration)
@@ -46,6 +53,11 @@ def main():
     IOLoop.current().start()
 
 
-if __name__ == '__main__':
+parser = argparse.ArgumentParser(description='Process command.')
+parser.add_argument('--execute', action="store", default="run")
+args = parser.parse_args()
+if args.execute == 'run':
     define('port', default=8888, help='port to listen on')
     main()
+elif args.execute == 'migrate':
+    migrate()

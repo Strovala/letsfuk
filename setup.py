@@ -2,8 +2,7 @@ from setuptools import setup, find_packages
 
 requires = [
     'tornado',
-    'tornado-sqlalchemy',
-    'psycopg2',
+    'tornado-sqlalchemy'
 ]
 
 setup(

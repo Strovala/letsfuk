@@ -3,12 +3,12 @@ import os
 
 import yaml
 
-base_dir = os.path.dirname(os.path.realpath(__file__))
+app_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 
 
 class Config(object):
     def __init__(self, file):
-        path = os.path.join(base_dir, 'config', file)
+        path = os.path.join(app_dir, 'config', file)
         with io.open(path, 'r') as stream:
             try:
                 self.data = yaml.safe_load(stream)

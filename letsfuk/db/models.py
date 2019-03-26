@@ -137,7 +137,3 @@ class Session(Base):
                 self.id, self.session_id, self.expires_at
             )
         )
-
-#
-# db_engine = create_engine("postgresql://letsfuk:root@localhost/letsfuk")
-# Base.metadata.create_all(db_engine)

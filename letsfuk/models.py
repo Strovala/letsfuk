@@ -6,7 +6,7 @@ import bcrypt
 import inject
 from sqlalchemy.exc import IntegrityError
 
-from config import Config
+from letsfuk.config import Config
 from letsfuk.db.models import User as DbUser, Session
 
 

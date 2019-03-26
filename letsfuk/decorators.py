@@ -6,7 +6,7 @@ from json import JSONDecodeError
 import inject
 from sqlalchemy.exc import IntegrityError
 
-from config import Config
+from letsfuk.config import Config
 from letsfuk.db.models import Session, User
 from letsfuk.errors import HttpException, InternalError
 
