@@ -5,7 +5,7 @@ from letsfuk.decorators import (
 )
 from letsfuk.errors import BadRequest, Conflict, InternalError, NotFound
 from letsfuk.handlers import BaseHandler
-from letsfuk.models import (
+from letsfuk.models.user import (
     User, InvalidRegistrationPayload,
     UserAlreadyExists, UserNotFound
 )

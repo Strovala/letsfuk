@@ -15,9 +15,24 @@ class Station(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    station_id = Column(UUID, index=True, nullable=True, unique=True)
-    latitude = Column(String, nullable=False)
-    longitude = Column(String, nullable=False)
+    station_id = Column(UUID, index=True, nullable=False, unique=True)
+    latitude = Column(String, index=True, nullable=False)
+    longitude = Column(String, index=True, nullable=False)
+
+    @classmethod
+    def add(cls, db, station_id, lat, lon):
+        station = cls(
+            station_id=station_id,
+            latitude=lat,
+            longitude=lon
+        )
+        db.add(station)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return station
 
     def to_dict(self):
         return {
@@ -41,6 +56,21 @@ class User(Base):
     username = Column(String, index=True, nullable=False, unique=True)
     email = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
+
+    @classmethod
+    def add(cls, db, username, email, password):
+        user = cls(
+            username=username,
+            password=password,
+            email=email
+        )
+        db.add(user)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return user
 
     @classmethod
     def query_by_username(cls, db, username):

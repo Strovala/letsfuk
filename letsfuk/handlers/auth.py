@@ -3,7 +3,7 @@ from letsfuk.decorators import (
 )
 from letsfuk.errors import BadRequest
 from letsfuk.handlers import BaseHandler
-from letsfuk.models import Auth, WrongCredentials
+from letsfuk.models.auth import Auth, WrongCredentials
 
 
 class LoginHandler(BaseHandler):
