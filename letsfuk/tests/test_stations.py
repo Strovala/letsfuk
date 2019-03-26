@@ -1,6 +1,6 @@
 import json
 
-from letsfuk.tests import BaseAsyncHTTPTestCase, LatitudeGenerator
+from letsfuk.tests import BaseAsyncHTTPTestCase
 
 
 class TestUsers(BaseAsyncHTTPTestCase):
@@ -26,5 +26,11 @@ class TestUsers(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        self.assertEqual(lat, response_body.get('lat'))
-        self.assertEqual(lon, response_body.get('lon'))
+        response_latitude = response_body.get('latitude')
+        latitude = float(response_latitude)
+        response_longitude = response_body.get('longitude')
+        longitude = float(response_longitude)
+        self.assertEqual(lat, latitude)
+        self.assertEqual(lon, longitude)
+
+    def test_subscribe(self):

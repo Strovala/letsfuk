@@ -38,4 +38,5 @@ class Station(object):
         lon = payload.get('lon')
         db = inject.instance('db')
         station_id = str(uuid.uuid4())
-        DbStation.add(db, station_id, lat, lon)
+        station = DbStation.add(db, station_id, lat, lon)
+        return station
