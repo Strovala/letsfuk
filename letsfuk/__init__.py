@@ -56,7 +56,7 @@ def main():
 
 
 parser = argparse.ArgumentParser(description='Process command.')
-parser.add_argument('--execute', action="store", default="run")
+parser.add_argument('--execute', action="store")
 args = parser.parse_args()
 if args.execute == 'run':
     define('port', default=8888, help='port to listen on')

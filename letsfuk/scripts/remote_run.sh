@@ -4,5 +4,5 @@ ssh root@euve258483.serverprofi24.net /bin/bash << EOF
     git fetch
     git pull
     pip install -U -r requirements.txt
-    python -m letsfuk
+    python -m letsfuk --execute run
 EOF
