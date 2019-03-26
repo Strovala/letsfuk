@@ -17,13 +17,11 @@ class InvalidRegistrationPayload(Exception):
 class InvalidUsername(InvalidRegistrationPayload):
     def __init__(self):
         super(InvalidUsername, self).__init__(
-            "Usernames can consist of lowercase and capitals\n"
-            "Usernames can consist of alphanumeric characters\n"
-            "Usernames can consist of underscore and hyphens\n"
-            "Usernames cannot be two underscores, two hypens "
-            "or two spaces in a row\n"
-            "Usernames cannot have a underscore, hypen or "
-            "space at the start or end\n"
+            "Usernames can consist of lowercase and capitals "
+            "alphanumeric characters and underscores\n"
+            "Usernames cannot be two underscores in a row\n"
+            "Usernames cannot have a underscore at the start or end\n"
+            "Usernames have to be between 3 and 16 character\n"
         )
 
 
@@ -40,7 +38,7 @@ class User(object):
     def validate_username(cls, username):
         username_regex = '^\w+$'
         matching = re.match(username_regex, username)
-        if not matching or not (3 <= len(username) <= 12):
+        if not matching or not (3 <= len(username) <= 16):
             raise InvalidUsername()
 
     @classmethod
@@ -62,9 +60,9 @@ class User(object):
 
     @classmethod
     def validate_registration_payload(cls, payload):
-        username = payload.get("username")
-        email = payload.get("email")
-        password = payload.get("password")
+        username = payload.get("username", "")
+        email = payload.get("email", "")
+        password = payload.get("password", "")
         cls.validate_username(username)
         cls.validate_email(email)
         cls.validate_password(password)

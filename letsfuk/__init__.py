@@ -13,7 +13,6 @@ from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
 
-define('port', default=8888, help='port to listen on')
 uuid_regex = (
     "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}"
     "\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
@@ -47,4 +46,6 @@ def main():
     IOLoop.current().start()
 
 
-main()
+if __name__ == '__main__':
+    define('port', default=8888, help='port to listen on')
+    main()
