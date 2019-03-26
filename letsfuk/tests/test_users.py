@@ -81,13 +81,13 @@ class TestUsers(BaseAsyncHTTPTestCase):
 
     def test_get_user(self):
         user = self.ensure_login(
-            username=self.username_generator.generate(),
-            email=self.email_generator.generate()
+            username=self.generator.username.generate(),
+            email=self.generator.email.generate()
         )
         session_id = user.get('session_id')
         another_user = self.ensure_register(
-            username=self.username_generator.generate(),
-            email=self.email_generator.generate()
+            username=self.generator.username.generate(),
+            email=self.generator.email.generate()
         )
         response = self.fetch(
             '/users/{}'.format(another_user["username"]),
@@ -102,8 +102,8 @@ class TestUsers(BaseAsyncHTTPTestCase):
 
     def test_get_user_unauthorized(self):
         another_user = self.ensure_register(
-            username=self.username_generator.generate(),
-            email=self.email_generator.generate()
+            username=self.generator.username.generate(),
+            email=self.generator.email.generate()
         )
         response = self.fetch(
             '/users/{}'.format(another_user["username"]),

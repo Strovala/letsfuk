@@ -11,6 +11,7 @@ from letsfuk.config import Config
 from letsfuk.db.models import Base
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
+from letsfuk.handlers.stations import StationsSubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
 
 uuid_regex = (
@@ -30,6 +31,7 @@ def make_app():
         ('/auth/logout', LogoutHandler),
         ('/users', UsersHandler),
         ('/users/(\w+)?', UserHandler),
+        ('/stations/subscribe', StationsSubscribeHandler),
     ],
         session_factory=factory,
         debug=debug

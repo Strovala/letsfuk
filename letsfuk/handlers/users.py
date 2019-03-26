@@ -1,7 +1,8 @@
 from sqlalchemy.exc import IntegrityError
-
-from letsfuk.decorators import endpoint_wrapper, resolve_body, map_exception, \
-    check_session
+from letsfuk.decorators import (
+    endpoint_wrapper, resolve_body,
+    map_exception, check_session
+)
 from letsfuk.errors import BadRequest, Conflict, InternalError, NotFound
 from letsfuk.handlers import BaseHandler
 from letsfuk.models import (

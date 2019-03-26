@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, uniform
 
 import inject
 import json
@@ -8,6 +8,14 @@ from tornado.testing import AsyncHTTPTestCase
 
 from letsfuk.db.models import Base
 from letsfuk.ioc import testing_configuration
+
+
+class GeneratorPool(object):
+    def __init__(self):
+        self.username = UsernameGenerator()
+        self.email = EmailGenerator()
+        self.latitude = LatitudeGenerator()
+        self.longitude = LongitudeGenerator()
 
 
 class Generator(object):
@@ -31,6 +39,18 @@ class Generator(object):
         pass
 
 
+class LatitudeGenerator(Generator):
+    def _generate(self):
+        lat = uniform(-90.0, 90.0)
+        return lat
+
+
+class LongitudeGenerator(Generator):
+    def _generate(self):
+        lon = uniform(-180.0, 180.0)
+        return lon
+
+
 class EmailGenerator(Generator):
     def _generate(self):
         left_side = ''.join([choice(self.letters) for _ in range(12)])
@@ -50,8 +70,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         super(BaseAsyncHTTPTestCase, self).setUp()
         engine = inject.instance('db_engine')
         Base.metadata.create_all(engine)
-        self.username_generator = UsernameGenerator()
-        self.email_generator = EmailGenerator()
+        self.generator = GeneratorPool()
 
     def get_app(self):
         inject.clear_and_configure(testing_configuration)
