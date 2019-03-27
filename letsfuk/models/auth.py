@@ -31,7 +31,7 @@ class Auth(object):
         matching = bcrypt.checkpw(encoded_password, encoded_hashed_password)
         if not matching:
             raise WrongCredentials("Wrong username/email or password")
-        existing_session = Session.query_by_user_id(db, user.id)
+        existing_session = Session.query_by_username(db, user.username)
         if existing_session is not None:
             return {
                 "user": user.to_dict(),
@@ -42,7 +42,7 @@ class Auth(object):
         session_ttl = config.get('session_ttl', 30)
         now = datetime.datetime.now()
         expires_at = now + datetime.timedelta(minutes=session_ttl)
-        _ = Session.add(db, session_id, user.id, expires_at)
+        _ = Session.add(db, session_id, user.username, expires_at)
         return {
             "user": user.to_dict(),
             "session_id": session_id

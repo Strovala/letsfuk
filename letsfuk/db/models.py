@@ -133,8 +133,8 @@ class Session(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(UUID, index=True, nullable=False, unique=True)
-    user_id = Column(
-        Integer, ForeignKey('users.id'), nullable=False, unique=True
+    username = Column(
+        String, ForeignKey('users.username'), nullable=False, unique=True
     )
     expires_at = Column(DateTime, nullable=False)
 
@@ -149,10 +149,10 @@ class Session(Base):
         return session
 
     @classmethod
-    def add(cls, db, session_id, user_id, expires_at):
+    def add(cls, db, session_id, username, expires_at):
         sess = cls(
             session_id=session_id,
-            user_id=user_id,
+            username=username,
             expires_at=expires_at
         )
         db.add(sess)
@@ -174,9 +174,9 @@ class Session(Base):
         return session
 
     @classmethod
-    def query_by_user_id(cls, db, user_id):
+    def query_by_username(cls, db, username):
         return db.query(cls).filter(
-            cls.user_id == user_id
+            cls.username == username
         ).first()
 
     @classmethod
@@ -204,27 +204,27 @@ class StationSubscriber(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     station_id = Column(UUID, nullable=False)
-    user_id = Column(UUID, index=True, nullable=False, unique=True)
+    username = Column(UUID, index=True, nullable=False, unique=True)
 
     @classmethod
     def get_users_for_station(cls, db, station_id):
-        user_ids = db.query(cls).filter(cls.station_id == station_id).first()
-        users = db.query(User).filter(User.username.in_(user_ids))
+        usernames = db.query(cls).filter(cls.station_id == station_id).first()
+        users = db.query(User).filter(User.username.in_(usernames))
         return users
 
     @classmethod
-    def get_station_for_user(cls, db, user_id):
-        station_id = db.query(cls).filter(cls.user_id == user_id).first()
+    def get_station_for_user(cls, db, username):
+        station_id = db.query(cls).filter(cls.username == username).first()
         station = db.query(Station).filter(
             Station.station_id == station_id
         ).first()
         return station
 
     @classmethod
-    def add(cls, db, station_id, user_id):
+    def add(cls, db, station_id, username):
         station_subscriber = cls(
             station_id=station_id,
-            user_id=user_id
+            username=username
         )
         db.add(station_subscriber)
         try:
@@ -237,12 +237,12 @@ class StationSubscriber(Base):
     def to_dict(self):
         return {
             "station_id": self.station_id,
-            "user_id": self.user_id,
+            "username": self.username,
         }
 
     def __repr__(self):
         return (
-            '<id: {} station_id: {} user_id: {}>'.format(
-                self.id, self.station_id, self.user_id
+            '<id: {} station_id: {} username: {}>'.format(
+                self.id, self.station_id, self.username
             )
         )
