@@ -20,15 +20,6 @@ Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(engine)
 
 
-class GeneratorPool(object):
-    def __init__(self):
-        self.username = UsernameGenerator()
-        self.email = EmailGenerator()
-        self.latitude = LatitudeGenerator()
-        self.longitude = LongitudeGenerator()
-        self.uuid = UuidGenerator()
-
-
 class Generator(object):
     letters = [chr(ord('a') + i) for i in range(26)]
     domains = [
@@ -82,10 +73,22 @@ class UsernameGenerator(Generator):
         return username
 
 
+class GeneratorPool(object):
+    def __init__(self):
+        self.username = UsernameGenerator()
+        self.email = EmailGenerator()
+        self.latitude = LatitudeGenerator()
+        self.longitude = LongitudeGenerator()
+        self.uuid = UuidGenerator()
+
+
+generator_pool = GeneratorPool()
+
+
 class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
     def setUp(self):
         super(BaseAsyncHTTPTestCase, self).setUp()
-        self.generator = GeneratorPool()
+        self.generator = generator_pool
 
     def get_app(self):
         return letsfuk.make_app()
