@@ -96,6 +96,7 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
         self.assertEqual(another_user.username, response_body.get('username'))
+        self.assertEqual(another_user.email, response_body.get('email'))
 
     def test_get_user_unauthorized(self):
         another_user = self.ensure_register()

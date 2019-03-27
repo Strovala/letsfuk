@@ -21,7 +21,7 @@ class TestAuth(BaseAsyncHTTPTestCase):
         username = user.get('username')
         email = user.get('email')
         self.assertEqual(registered_user.username, username)
-        self.assertEqual(registered_user.username, username)
+        self.assertEqual(registered_user.email, email)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
@@ -41,6 +41,8 @@ class TestAuth(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         user = response_body.get('user', dict())
         email = user.get('email')
+        username = user.get('username')
+        self.assertEqual(registered_user.username, username)
         self.assertEqual(registered_user.email, email)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
@@ -98,3 +100,26 @@ class TestAuth(BaseAsyncHTTPTestCase):
             body=json.dumps(body).encode('utf-8')
         )
         self.assertEqual(response.code, 400)
+
+    def test_logout(self):
+        session, _ = self.ensure_login()
+        response = self.fetch(
+            '/auth/logout',
+            method="POST",
+            body=json.dumps(dict()).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        message = response_body.get('message')
+        self.assertIn("logged out", message)
+
+    def test_logout_unauthorized(self):
+        response = self.fetch(
+            '/auth/logout',
+            method="POST",
+            body=json.dumps(dict()).encode('utf-8')
+        )
+        self.assertEqual(response.code, 401)
