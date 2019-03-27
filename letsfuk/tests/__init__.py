@@ -12,6 +12,13 @@ from letsfuk.db.models import Base, Station, User, Session
 from letsfuk.models.user import User as UserModel
 from letsfuk.ioc import testing_configuration
 
+# Set up database for all tests
+inject.clear()
+inject.clear_and_configure(testing_configuration)
+engine = inject.instance('db_engine')
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(engine)
+
 
 class GeneratorPool(object):
     def __init__(self):
@@ -71,25 +78,10 @@ class UsernameGenerator(Generator):
 class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
     def setUp(self):
         super(BaseAsyncHTTPTestCase, self).setUp()
-        engine = inject.instance('db_engine')
-        Base.metadata.drop_all(bind=engine)
-        Base.metadata.create_all(engine)
         self.generator = GeneratorPool()
 
     def get_app(self):
-        inject.clear_and_configure(testing_configuration)
         return letsfuk.make_app()
-
-    def tearDown(self):
-        super(BaseAsyncHTTPTestCase, self).tearDown()
-        engine = inject.instance('db_engine')
-        db = inject.instance('db')
-        try:
-            db.commit()
-        except Exception as _:
-            db.rollback()
-        Base.metadata.drop_all(bind=engine)
-        inject.clear()
 
     def ensure_register(self, username=None, password="Test123!", email=None):
         if username is None:
