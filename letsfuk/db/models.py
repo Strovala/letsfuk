@@ -1,3 +1,4 @@
+import inject
 from sqlalchemy import (
     Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
     func
@@ -16,8 +17,7 @@ class Station(Base):
         UniqueConstraint('latitude', 'longitude', name='location'),
     )
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    station_id = Column(UUID, index=True, nullable=False, unique=True)
+    id = Column(Integer, ForeignKey('receivers.id'), primary_key=True)
     _latitude = Column(
         Numeric(10, 6), index=True, nullable=False,
         name='latitude'
@@ -27,10 +27,17 @@ class Station(Base):
         name='longitude'
     )
 
+    @property
+    def station_id(self):
+        db = inject.instance('db')
+        receiver = db.query(Receiver).filter(Receiver.id == self.id).first()
+        return receiver.receiver_id
+
     @classmethod
     def add(cls, db, station_id, lat, lon):
+        receiver = Receiver.add(db, station_id)
         station = cls(
-            station_id=station_id,
+            id=receiver.id,
             _latitude=lat,
             _longitude=lon
         )
@@ -82,16 +89,22 @@ class Station(Base):
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(UUID, index=True, nullable=False, unique=True)
+    id = Column(Integer, ForeignKey('receivers.id'), primary_key=True)
     username = Column(String, index=True, nullable=False, unique=True)
     email = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
 
+    @property
+    def user_id(self):
+        db = inject.instance('db')
+        receiver = db.query(Receiver).filter(Receiver.id == self.id).first()
+        return receiver.receiver_id
+
     @classmethod
     def add(cls, db, user_id, username, email, password):
+        receiver = Receiver.add(db, user_id)
         user = cls(
-            user_id=user_id,
+            id=receiver.id,
             username=username,
             password=password,
             email=email
@@ -106,8 +119,8 @@ class User(Base):
 
     @classmethod
     def query_by_user_id(cls, db, user_id):
-        return db.query(cls).filter(
-            cls.user_id == user_id
+        return db.query(cls).join(Receiver).filter(
+            Receiver.receiver_id == user_id
         ).first()
 
     @classmethod
@@ -143,7 +156,7 @@ class Session(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(UUID, index=True, nullable=False, unique=True)
     user_id = Column(
-        UUID, ForeignKey('users.user_id'), nullable=False, unique=True
+        UUID, ForeignKey('receivers.receiver_id'), nullable=False, unique=True
     )
     expires_at = Column(DateTime, nullable=False)
 
@@ -212,9 +225,11 @@ class Subscriber(Base):
     __tablename__ = 'subscribers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    station_id = Column(UUID, ForeignKey('stations.station_id'), nullable=False)
+    station_id = Column(
+        UUID, ForeignKey('receivers.receiver_id'), nullable=False
+    )
     user_id = Column(
-        UUID, ForeignKey('users.user_id'), index=True,
+        UUID, ForeignKey('receivers.receiver_id'), index=True,
         nullable=False, unique=True
     )
 
@@ -258,3 +273,36 @@ class Subscriber(Base):
                 self.id, self.station_id, self.user_id
             )
         )
+
+
+class Receiver(Base):
+    __tablename__ = 'receivers'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    receiver_id = Column(UUID, index=True, nullable=False, unique=True)
+
+    @classmethod
+    def add(cls, db, receiver_id):
+        receiver = Receiver(
+            receiver_id=receiver_id
+        )
+        db.add(receiver)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return receiver
+
+
+class Message(Base):
+    __tablename__ = 'messages'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message_id = Column(UUID, index=True, nullable=False, unique=True)
+    receiver_id = Column(
+        UUID, ForeignKey('receivers.receiver_id'), nullable=False
+    )
+    sender_id = Column(
+        UUID, ForeignKey('receivers.receiver_id'), nullable=False
+    )
