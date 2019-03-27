@@ -3,7 +3,10 @@ from letsfuk.decorators import (
     map_exception)
 from letsfuk.errors import BadRequest
 from letsfuk.handlers import BaseHandler
-from letsfuk.models.station import Station, InvalidLongitude, InvalidLatitude
+from letsfuk.models.station import (
+    Station, InvalidLongitude, InvalidLatitude,
+    Subscriber
+)
 
 
 class StationsHandler(BaseHandler):
@@ -23,5 +26,5 @@ class SubscribeHandler(BaseHandler):
     @resolve_body()
     def post(self):
         Station.validate_location(self.request.body)
-        station = Station.get_closest(self.request.body)
-        return station.to_dict(), 200
+        subscriber = Subscriber.add(self.request.body)
+        return subscriber.to_dict(), 200

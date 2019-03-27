@@ -199,8 +199,8 @@ class Session(Base):
         )
 
 
-class StationSubscriber(Base):
-    __tablename__ = 'station_subscribers'
+class Subscriber(Base):
+    __tablename__ = 'subscribers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     station_id = Column(UUID, nullable=False)

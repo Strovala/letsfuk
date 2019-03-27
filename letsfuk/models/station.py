@@ -2,6 +2,7 @@ import uuid
 
 import inject
 from letsfuk.db.models import Station as DbStation
+from letsfuk.db.models import Subscriber as DbSubscriber
 
 
 class InvalidLatitude(Exception):
@@ -42,9 +43,15 @@ class Station(object):
         return station
 
     @classmethod
-    def get_closest(cls, payload):
-        lat = payload.get('lat')
-        lon = payload.get('lon')
+    def get_closest(cls, lat, lon):
         db = inject.instance('db')
         station = DbStation.get_closest(db, lat, lon)
         return station
+
+
+class Subscriber(object):
+    @classmethod
+    def add(cls, payload):
+        lat = payload.get('lat')
+        lon = payload.get('lon')
+        station = Station.get_closest(lat, lon)
