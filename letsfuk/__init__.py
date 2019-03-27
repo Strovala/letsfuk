@@ -30,7 +30,7 @@ def make_app():
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/users', UsersHandler),
-        ('/users/(\w+)?', UserHandler),
+        ('/users/({})?'.format(uuid_regex), UserHandler),
         ('/stations', StationsHandler),
         ('/stations/subscribe', SubscribeHandler),
     ],

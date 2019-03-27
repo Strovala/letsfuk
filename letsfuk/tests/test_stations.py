@@ -90,4 +90,4 @@ class TestStations(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         station = self.closest_station(stations, lat, lon)
         self.assertEqual(station.station_id, response_body.get('station_id'))
-        self.assertEqual(user.username, response_body.get('username'))
+        self.assertEqual(user.user_id, response_body.get('user_id'))

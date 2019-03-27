@@ -20,8 +20,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         user = response_body.get('user', dict())
         username = user.get('username')
         email = user.get('email')
+        user_id = user.get('user_id')
         self.assertEqual(registered_user.username, username)
         self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
@@ -42,8 +44,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         user = response_body.get('user', dict())
         email = user.get('email')
         username = user.get('username')
+        user_id = user.get('user_id')
         self.assertEqual(registered_user.username, username)
         self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 

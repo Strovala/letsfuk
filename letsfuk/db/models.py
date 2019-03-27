@@ -83,13 +83,15 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(UUID, index=True, nullable=False, unique=True)
     username = Column(String, index=True, nullable=False, unique=True)
     email = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
 
     @classmethod
-    def add(cls, db, username, email, password):
+    def add(cls, db, user_id, username, email, password):
         user = cls(
+            user_id=user_id,
             username=username,
             password=password,
             email=email
@@ -101,6 +103,12 @@ class User(Base):
             db.rollback()
             raise e
         return user
+
+    @classmethod
+    def query_by_user_id(cls, db, user_id):
+        return db.query(cls).filter(
+            cls.user_id == user_id
+        ).first()
 
     @classmethod
     def query_by_username(cls, db, username):
@@ -116,14 +124,15 @@ class User(Base):
 
     def to_dict(self):
         return {
+            "user_id": self.user_id,
             "username": self.username,
             "email": self.email,
         }
 
     def __repr__(self):
         return (
-            '<id: {} username: {} email: {}>'.format(
-                self.id, self.username, self.email
+            '<id: {} user_id: {} username: {} email: {}>'.format(
+                self.id, self.user_id, self.username, self.email
             )
         )
 
@@ -133,8 +142,8 @@ class Session(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(UUID, index=True, nullable=False, unique=True)
-    username = Column(
-        String, ForeignKey('users.username'), nullable=False, unique=True
+    user_id = Column(
+        UUID, ForeignKey('users.user_id'), nullable=False, unique=True
     )
     expires_at = Column(DateTime, nullable=False)
 
@@ -149,10 +158,10 @@ class Session(Base):
         return session
 
     @classmethod
-    def add(cls, db, session_id, username, expires_at):
+    def add(cls, db, session_id, user_id, expires_at):
         sess = cls(
             session_id=session_id,
-            username=username,
+            user_id=user_id,
             expires_at=expires_at
         )
         db.add(sess)
@@ -174,9 +183,9 @@ class Session(Base):
         return session
 
     @classmethod
-    def query_by_username(cls, db, username):
+    def query_by_user_id(cls, db, user_id):
         return db.query(cls).filter(
-            cls.username == username
+            cls.user_id == user_id
         ).first()
 
     @classmethod
@@ -203,46 +212,49 @@ class Subscriber(Base):
     __tablename__ = 'subscribers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    station_id = Column(UUID, nullable=False)
-    username = Column(String, index=True, nullable=False, unique=True)
+    station_id = Column(UUID, ForeignKey('stations.station_id'), nullable=False)
+    user_id = Column(
+        UUID, ForeignKey('users.user_id'), index=True,
+        nullable=False, unique=True
+    )
 
     @classmethod
     def get_users_for_station(cls, db, station_id):
-        usernames = db.query(cls).filter(cls.station_id == station_id).first()
-        users = db.query(User).filter(User.username.in_(usernames))
+        user_ids = db.query(cls).filter(cls.station_id == station_id).first()
+        users = db.query(User).filter(User.user_id.in_(user_ids))
         return users
 
     @classmethod
-    def get_station_for_user(cls, db, username):
-        station_id = db.query(cls).filter(cls.username == username).first()
+    def get_station_for_user(cls, db, user_id):
+        station_id = db.query(cls).filter(cls.user_id == user_id).first()
         station = db.query(Station).filter(
             Station.station_id == station_id
         ).first()
         return station
 
     @classmethod
-    def add(cls, db, station_id, username):
-        station_subscriber = cls(
+    def add(cls, db, station_id, user_id):
+        subscriber = cls(
             station_id=station_id,
-            username=username
+            user_id=user_id
         )
-        db.add(station_subscriber)
+        db.add(subscriber)
         try:
             db.commit()
         except IntegrityError as e:
             db.rollback()
             raise e
-        return station_subscriber
+        return subscriber
 
     def to_dict(self):
         return {
             "station_id": self.station_id,
-            "username": self.username,
+            "user_id": self.user_id,
         }
 
     def __repr__(self):
         return (
-            '<id: {} station_id: {} username: {}>'.format(
-                self.id, self.station_id, self.username
+            '<id: {} station_id: {} user_id: {}>'.format(
+                self.id, self.station_id, self.user_id
             )
         )

@@ -27,6 +27,6 @@ class UserHandler(BaseHandler):
     @endpoint_wrapper()
     @check_session()
     @map_exception(out_of=UserNotFound, make=NotFound)
-    def get(self, username):
-        user = User.get(username)
+    def get(self, user_id):
+        user = User.get(user_id)
         return user.to_dict(), 200

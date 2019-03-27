@@ -70,7 +70,7 @@ def resolve_user(**kwargs):
         @wraps(func)
         def wrapper(self, *args, **kw):
             db = inject.instance('db')
-            user = User.query_by_username(db, self.request.session.username)
+            user = User.query_by_user_id(db, self.request.session.user_id)
             self.request.user = user
             return func(self, *args, **kw)
         return wrapper

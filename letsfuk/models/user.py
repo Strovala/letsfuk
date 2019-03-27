@@ -1,4 +1,5 @@
 import re
+import uuid
 
 import bcrypt
 import inject
@@ -76,15 +77,16 @@ class User(object):
                     "User with given email already exists"
                 )
         bcrypted_password = cls.bcrypt_password(password)
-        user = DbUser.add(db, username, email, bcrypted_password)
+        user_id = str(uuid.uuid4())
+        user = DbUser.add(db, user_id, username, email, bcrypted_password)
         return user
 
     @classmethod
-    def get(cls, username):
+    def get(cls, user_id):
         db = inject.instance('db')
-        user = DbUser.query_by_username(db, username)
+        user = DbUser.query_by_user_id(db, user_id)
         if user is None:
             raise UserNotFound(
-                "There is no user with username '{}'".format(username)
+                "There is no user with user_id '{}'".format(user_id)
             )
         return user

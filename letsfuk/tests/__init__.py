@@ -26,6 +26,7 @@ class GeneratorPool(object):
         self.email = EmailGenerator()
         self.latitude = LatitudeGenerator()
         self.longitude = LongitudeGenerator()
+        self.uuid = UuidGenerator()
 
 
 class Generator(object):
@@ -47,6 +48,12 @@ class Generator(object):
 
     def _generate(self):
         pass
+
+
+class UuidGenerator(Generator):
+    def _generate(self):
+        value = str(uuid.uuid4())
+        return value
 
 
 class LatitudeGenerator(Generator):
@@ -90,7 +97,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             email = self.generator.email.generate()
         bcrypted_password = UserModel.bcrypt_password(password)
         db = inject.instance('db')
-        user = User.add(db, username, email, bcrypted_password)
+        user_id = str(uuid.uuid4())
+        user = User.add(db, user_id, username, email, bcrypted_password)
         return user
 
     def ensure_login(self, username=None, password="Test123!", email=None):
@@ -102,7 +110,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.datetime.now()
         expires_at = now + datetime.timedelta(minutes=300)
         session = Session.add(
-            db, session_id, registered_user.username, expires_at
+            db, session_id, registered_user.user_id, expires_at
         )
         return session, registered_user
 
