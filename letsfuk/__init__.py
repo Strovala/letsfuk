@@ -11,6 +11,7 @@ from letsfuk.config import Config
 from letsfuk.db.models import Base
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
+from letsfuk.handlers.messages import MessageHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
 
@@ -33,6 +34,7 @@ def make_app():
         ('/users/({})?'.format(uuid_regex), UserHandler),
         ('/stations', StationsHandler),
         ('/stations/subscribe', SubscribeHandler),
+        ('/messages/({})?'.format(uuid_regex), MessageHandler),
     ],
         session_factory=factory,
         debug=debug
