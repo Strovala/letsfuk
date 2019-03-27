@@ -11,6 +11,14 @@ from tornado_sqlalchemy import declarative_base
 Base = declarative_base()
 
 
+def commit(db):
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise e
+
+
 class Station(Base):
     __tablename__ = 'stations'
     __table_args__ = (
@@ -42,11 +50,7 @@ class Station(Base):
             _longitude=lon
         )
         db.add(station)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return station
 
     @hybrid_method
@@ -110,11 +114,7 @@ class User(Base):
             email=email
         )
         db.add(user)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return user
 
     @classmethod
@@ -163,11 +163,7 @@ class Session(Base):
     @classmethod
     def update_expiring(cls, db, session, expires_at):
         session.expires_at = expires_at
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return session
 
     @classmethod
@@ -178,21 +174,13 @@ class Session(Base):
             expires_at=expires_at
         )
         db.add(sess)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return sess
 
     @classmethod
     def delete(cls, db, session):
         db.delete(session)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return session
 
     @classmethod
@@ -254,11 +242,7 @@ class Subscriber(Base):
             user_id=user_id
         )
         db.add(subscriber)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return subscriber
 
     def to_dict(self):
@@ -287,11 +271,7 @@ class Receiver(Base):
             receiver_id=receiver_id
         )
         db.add(receiver)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return receiver
 
 
@@ -306,3 +286,14 @@ class Message(Base):
     sender_id = Column(
         UUID, ForeignKey('receivers.receiver_id'), nullable=False
     )
+
+    @classmethod
+    def add(cls, db, message_id, receiver_id, sender_id):
+        message = Message(
+            message_id=message_id,
+            receiver_id=receiver_id,
+            sender_id=sender_id
+        )
+        db.add(message)
+        commit(db)
+        return message
