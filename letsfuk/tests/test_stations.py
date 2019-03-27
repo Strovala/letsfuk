@@ -1,10 +1,12 @@
 import json
-
-from letsfuk.db.models import Station
 from letsfuk.tests import BaseAsyncHTTPTestCase
 
 
 class TestStations(BaseAsyncHTTPTestCase):
+    def _round_value(self, value, decimal_points=6):
+        value = float("{0:.{1}f}".format(value, decimal_points))
+        return value
+
     def test_add_station(self):
         session = self.ensure_login()
         session_id = session.session_id
@@ -26,8 +28,8 @@ class TestStations(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         latitude = response_body.get('latitude')
         longitude = response_body.get('longitude')
-        self.assertEqual(Station.round_value(lat), latitude)
-        self.assertEqual(Station.round_value(lon), longitude)
+        self.assertEqual(self._round_value(lat), latitude)
+        self.assertEqual(self._round_value(lon), longitude)
 
     def test_add_station_invalid_lat(self):
         session = self.ensure_login()

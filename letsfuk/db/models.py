@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Float,
+    Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
     func
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -18,22 +18,21 @@ class Station(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     station_id = Column(UUID, index=True, nullable=False, unique=True)
-    latitude = Column(Float, index=True, nullable=False)
-    longitude = Column(Float, index=True, nullable=False)
-
-    @classmethod
-    def round_value(cls, value, decimal_points=6):
-        value = float("{0:.{1}f}".format(value, decimal_points))
-        return value
+    _latitude = Column(
+        Numeric(10, 6), index=True, nullable=False,
+        name='latitude'
+    )
+    _longitude = Column(
+        Numeric(10, 6), index=True, nullable=False,
+        name='longitude'
+    )
 
     @classmethod
     def add(cls, db, station_id, lat, lon):
-        lat = cls.round_value(lat)
-        lon = cls.round_value(lon)
         station = cls(
             station_id=station_id,
-            latitude=lat,
-            longitude=lon
+            _latitude=lat,
+            _longitude=lon
         )
         db.add(station)
         try:
@@ -46,18 +45,24 @@ class Station(Base):
     @hybrid_method
     def distance(self, lat, lon):
         return func.sqrt(
-            (self.latitude - lat)*(self.latitude - lat) +
-            (self.longitude - lon)*(self.longitude - lon)
+            (self._latitude - lat)*(self._latitude - lat) +
+            (self._longitude - lon)*(self._longitude - lon)
         )
 
     @classmethod
     def get_closest(cls, db, lat, lon):
-        lat = cls.round_value(lat)
-        lon = cls.round_value(lon)
-        station = db.query(
-            cls
-        ).group_by(cls.id).order_by(cls.distance(lat, lon)).first()
+        station = db.query(cls).group_by(cls.id).order_by(
+            cls.distance(lat, lon)
+        ).first()
         return station
+
+    @property
+    def latitude(self):
+        return float(self._latitude)
+
+    @property
+    def longitude(self):
+        return float(self._longitude)
 
     def to_dict(self):
         return {
@@ -190,5 +195,54 @@ class Session(Base):
         return (
             '<id: {} session_id: {} expires_at: {}>'.format(
                 self.id, self.session_id, self.expires_at
+            )
+        )
+
+
+class StationSubscriber(Base):
+    __tablename__ = 'station_subscribers'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    station_id = Column(UUID, nullable=False)
+    user_id = Column(UUID, index=True, nullable=False, unique=True)
+
+    @classmethod
+    def get_users_for_station(cls, db, station_id):
+        user_ids = db.query(cls).filter(cls.station_id == station_id).first()
+        users = db.query(User).filter(User.username.in_(user_ids))
+        return users
+
+    @classmethod
+    def get_station_for_user(cls, db, user_id):
+        station_id = db.query(cls).filter(cls.user_id == user_id).first()
+        station = db.query(Station).filter(
+            Station.station_id == station_id
+        ).first()
+        return station
+
+    @classmethod
+    def add(cls, db, station_id, user_id):
+        station_subscriber = cls(
+            station_id=station_id,
+            user_id=user_id
+        )
+        db.add(station_subscriber)
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise e
+        return station_subscriber
+
+    def to_dict(self):
+        return {
+            "station_id": self.station_id,
+            "user_id": self.user_id,
+        }
+
+    def __repr__(self):
+        return (
+            '<id: {} station_id: {} user_id: {}>'.format(
+                self.id, self.station_id, self.user_id
             )
         )
