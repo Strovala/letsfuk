@@ -8,7 +8,7 @@ class TestStations(BaseAsyncHTTPTestCase):
         return value
 
     def test_add_station(self):
-        session = self.ensure_login()
+        session, _ = self.ensure_login()
         session_id = session.session_id
         lat = self.generator.latitude.generate()
         lon = self.generator.longitude.generate()
@@ -32,7 +32,7 @@ class TestStations(BaseAsyncHTTPTestCase):
         self.assertEqual(self._round_value(lon), longitude)
 
     def test_add_station_invalid_lat(self):
-        session = self.ensure_login()
+        session, _ = self.ensure_login()
         session_id = session.session_id
         lat = 500
         lon = self.generator.longitude.generate()
@@ -51,7 +51,7 @@ class TestStations(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_add_station_invalid_lon(self):
-        session = self.ensure_login()
+        session, _ = self.ensure_login()
         session_id = session.session_id
         lat = self.generator.latitude.generate()
         lon = 500
@@ -71,7 +71,7 @@ class TestStations(BaseAsyncHTTPTestCase):
 
     def test_subscribe(self):
         stations = self.ensure_stations(45)
-        session = self.ensure_login()
+        session, user = self.ensure_login()
         session_id = session.session_id
         lat = self.generator.latitude.generate()
         lon = self.generator.longitude.generate()
@@ -90,3 +90,4 @@ class TestStations(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         station = self.closest_station(stations, lat, lon)
         self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertEqual(user.username, response_body.get('username'))

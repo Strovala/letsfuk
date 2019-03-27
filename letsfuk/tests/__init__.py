@@ -109,8 +109,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         session_id = str(uuid.uuid4())
         now = datetime.datetime.now()
         expires_at = now + datetime.timedelta(minutes=300)
-        session = Session.add(db, session_id, registered_user.id, expires_at)
-        return session
+        session = Session.add(
+            db, session_id, registered_user.username, expires_at
+        )
+        return session, registered_user
 
     def add_station(self, lat=0, lon=0):
         db = inject.instance('db')

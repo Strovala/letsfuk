@@ -19,6 +19,8 @@ class TestAuth(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         user = response_body.get('user', dict())
         username = user.get('username')
+        email = user.get('email')
+        self.assertEqual(registered_user.username, username)
         self.assertEqual(registered_user.username, username)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)

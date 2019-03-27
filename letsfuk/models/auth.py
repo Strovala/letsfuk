@@ -43,10 +43,7 @@ class Auth(object):
         now = datetime.datetime.now()
         expires_at = now + datetime.timedelta(minutes=session_ttl)
         _ = Session.add(db, session_id, user.username, expires_at)
-        return {
-            "user": user.to_dict(),
-            "session_id": session_id
-        }
+        return user, session_id
 
     @classmethod
     def logout(cls, session):

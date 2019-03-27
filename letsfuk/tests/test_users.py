@@ -83,7 +83,7 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_get_user(self):
-        session = self.ensure_login()
+        session, _ = self.ensure_login()
         session_id = session.session_id
         another_user = self.ensure_register()
         response = self.fetch(

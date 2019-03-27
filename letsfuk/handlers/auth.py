@@ -11,8 +11,11 @@ class LoginHandler(BaseHandler):
     @map_exception(out_of=WrongCredentials, make=BadRequest)
     @resolve_body()
     def post(self):
-        response = Auth.login(self.request.body)
-        return response, 200
+        user, session_id = Auth.login(self.request.body)
+        return {
+            "user": user.to_dict(),
+            "session_id": session_id
+        }, 200
 
 
 class LogoutHandler(BaseHandler):
