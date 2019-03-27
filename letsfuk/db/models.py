@@ -204,7 +204,7 @@ class Subscriber(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     station_id = Column(UUID, nullable=False)
-    username = Column(UUID, index=True, nullable=False, unique=True)
+    username = Column(String, index=True, nullable=False, unique=True)
 
     @classmethod
     def get_users_for_station(cls, db, station_id):

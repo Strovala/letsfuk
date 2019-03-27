@@ -51,7 +51,10 @@ class Station(object):
 
 class Subscriber(object):
     @classmethod
-    def add(cls, payload):
+    def add(cls, payload, user):
         lat = payload.get('lat')
         lon = payload.get('lon')
         station = Station.get_closest(lat, lon)
+        db = inject.instance('db')
+        subscriber = DbSubscriber.add(db, station.station_id, user.username)
+        return subscriber

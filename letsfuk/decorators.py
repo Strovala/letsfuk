@@ -69,7 +69,8 @@ def resolve_user(**kwargs):
     def dec(func):
         @wraps(func)
         def wrapper(self, *args, **kw):
-            user = User.query.filter_by(id=self.request.session.user_id)
+            db = inject.instance('db')
+            user = User.query_by_username(db, self.request.session.username)
             self.request.user = user
             return func(self, *args, **kw)
         return wrapper
