@@ -16,7 +16,7 @@ class TestUsers(BaseAsyncHTTPTestCase):
             method="POST",
             body=json.dumps(body).encode('utf-8')
         )
-        self.assertEqual(response.code, 201)
+        self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
         self.assertEqual(username, response_body.get('username'))
         self.assertEqual(email, response_body.get('email'))

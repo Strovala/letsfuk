@@ -20,7 +20,7 @@ class UsersHandler(BaseHandler):
     def post(self):
         User.validate_registration_payload(self.request.body)
         user = User.add(self.request.body)
-        return user.to_dict(), 201
+        return user.to_dict(), 200
 
 
 class UserHandler(BaseHandler):

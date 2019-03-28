@@ -14,4 +14,4 @@ class MessageHandler(BaseHandler):
         message = Message.add(
             self.request.body, receiver_id, self.request.user
         )
-        return message.to_dict(), 201
+        return message.to_dict(), 200

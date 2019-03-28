@@ -10,7 +10,7 @@ from tornado.testing import AsyncHTTPTestCase
 
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base
-from letsfuk.db.models import Station
+from letsfuk.db.models import Station, Subscriber
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
 from letsfuk.ioc import testing_configuration
@@ -76,6 +76,17 @@ class UsernameGenerator(Generator):
         return username
 
 
+class TextGenerator(Generator):
+    letters = (
+            [chr(ord('a') + i) for i in range(26)] +
+            list(' !@#$%^&*./,>?|\'\\/')
+    )
+
+    def _generate(self):
+        text = ''.join([choice(self.letters) for _ in range(100)])
+        return text
+
+
 class GeneratorPool(object):
     def __init__(self):
         self.username = UsernameGenerator()
@@ -83,6 +94,7 @@ class GeneratorPool(object):
         self.latitude = LatitudeGenerator()
         self.longitude = LongitudeGenerator()
         self.uuid = UuidGenerator()
+        self.text = TextGenerator()
 
 
 generator_pool = GeneratorPool()
@@ -163,3 +175,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
                 closest_station_index = i
         closest_station = stations[closest_station_index]
         return closest_station
+
+    def subscribe(self, station_id, user_id):
+        db = inject.instance('db')
+        subscriber = Subscriber.add(db, station_id, user_id)
+        return subscriber

@@ -87,6 +87,7 @@ class TestStations(BaseAsyncHTTPTestCase):
                 "session-id": session_id
             }
         )
+        self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
         station = self.closest_station(stations, lat, lon)
         self.assertEqual(station.station_id, response_body.get('station_id'))
