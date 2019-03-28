@@ -231,9 +231,9 @@ class Subscriber(Base):
 
     @classmethod
     def get_station_for_user(cls, db, user_id):
-        station_id = db.query(cls).filter(cls.user_id == user_id).first()
+        station = db.query(cls).filter(cls.user_id == user_id).first()
         station = db.query(Station).filter(
-            Station.station_id == station_id
+            Station.station_id == station.station_id
         ).first()
         return station
 
@@ -276,26 +276,16 @@ class Message(Base):
     user_id = Column(
         UUID, ForeignKey('users.user_id'), nullable=True
     )
+    sender_id = Column(
+        UUID, ForeignKey('users.user_id'), nullable=True
+    )
     sent_at = Column(DateTime, nullable=False)
     text = Column(String(600), nullable=False)
 
     @classmethod
-    def resolve_receiver(cls, db, receiver_id):
-        user = User.query_by_user_id(db, receiver_id)
-        user_id = None
-        if user is not None:
-            user_id = user.user_id
-        station = Station.query_by_station_id(db, receiver_id)
-        station_id = None
-        if station is not None:
-            station_id = station.station_id
-        return station_id, user_id
-
-    @classmethod
     def add(
-            cls, db, message_id, receiver_id, sender_id, text, sent_at
+            cls, db, message_id, station_id, user_id, sender_id, text, sent_at
     ):
-        station_id, user_id = cls.resolve_receiver(db, receiver_id)
         message = Message(
             message_id=message_id,
             station_id=station_id,
@@ -309,10 +299,15 @@ class Message(Base):
         return message
 
     def to_dict(self):
+        receiver_id = self.station_id
+        if receiver_id is None:
+            receiver_id = self.user_id
         return {
             "message_id": self.message_id,
-            "receiver_id": self.receiver_id,
+            "receiver_id": receiver_id,
             "sender_id": self.sender_id,
+            "sent_at": str(self.sent_at),
+            "text": self.text
         }
 
     def __repr__(self):

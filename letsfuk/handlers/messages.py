@@ -10,8 +10,8 @@ class MessageHandler(BaseHandler):
     @check_session()
     @resolve_user()
     @resolve_body()
-    def post(self, receiver_id):
+    def post(self):
         message = Message.add(
-            self.request.body, receiver_id, self.request.user
+            self.request.body, self.request.user
         )
         return message.to_dict(), 200

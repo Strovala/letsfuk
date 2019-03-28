@@ -34,7 +34,7 @@ def make_app():
         ('/users/({})?'.format(uuid_regex), UserHandler),
         ('/stations', StationsHandler),
         ('/stations/subscribe', SubscribeHandler),
-        ('/messages/({})?'.format(uuid_regex), MessageHandler),
+        ('/messages', MessageHandler),
     ],
         session_factory=factory,
         debug=debug
