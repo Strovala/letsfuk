@@ -1,16 +1,16 @@
 import uuid
 from random import choice, uniform
 
-import datetime
 import inject
 from math import sqrt
+from datetime import datetime, timedelta
 
 import letsfuk
 from tornado.testing import AsyncHTTPTestCase
 
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base
-from letsfuk.db.models import Station, Subscriber
+from letsfuk.db.models import Station, Subscriber, Message
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
 from letsfuk.ioc import testing_configuration
@@ -125,14 +125,18 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             username=username, password=password, email=email
         )
         session_id = str(uuid.uuid4())
-        now = datetime.datetime.now()
-        expires_at = now + datetime.timedelta(minutes=300)
+        now = datetime.now()
+        expires_at = now + timedelta(minutes=300)
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
         )
         return session, registered_user
 
-    def add_station(self, lat=0, lon=0):
+    def add_station(self, lat=None, lon=None):
+        if lat is None:
+            lat = self.generator.latitude.generate()
+        if lon is None:
+            lon = self.generator.longitude.generate()
         db = inject.instance('db')
         station_id = str(uuid.uuid4())
         station = Station.add(db, station_id, lat, lon)
@@ -180,3 +184,49 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         db = inject.instance('db')
         subscriber = Subscriber.add(db, station_id, user_id)
         return subscriber
+
+    def add_private_message(self, sender_id, receiver_id):
+        db = inject.instance('db')
+        message_id = self.generator.uuid.generate()
+        text = self.generator.text.generate()
+        now = datetime.now()
+        sender_id = str(sender_id)
+        receiver_id = str(receiver_id)
+        message = Message.add(
+            db, message_id, None, receiver_id, sender_id, text, now
+        )
+        return message
+
+    def add_group_message(self, sender_id, receiver_id):
+        db = inject.instance('db')
+        message_id = self.generator.uuid.generate()
+        text = self.generator.text.generate()
+        now = datetime.now()
+        sender_id = str(sender_id)
+        receiver_id = str(receiver_id)
+        message = Message.add(
+            db, message_id, receiver_id, None, sender_id, text, now
+        )
+        return message
+
+    def make_station_chat(self, station):
+        users = [self.ensure_login() for _ in range(5)]
+        [self.subscribe(station.station_id, user.user_id) for _, user in users]
+        messages = [
+            self.add_group_message(user.user_id, station.station_id)
+            for _ in range(4)
+            for _, user in users
+        ]
+        return messages
+
+    def make_private_chat(self, user, another_user):
+        couple_of_messages = [
+            self.add_private_message(user.user_id, another_user.user_id),
+            self.add_private_message(another_user.user_id, user.user_id),
+            self.add_private_message(user.user_id, another_user.user_id),
+            self.add_private_message(user.user_id, another_user.user_id),
+            self.add_private_message(another_user.user_id, user.user_id),
+        ]
+        messages = []
+        [messages.extend(couple_of_messages) for _ in range(4)]
+        return messages

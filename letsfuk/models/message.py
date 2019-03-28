@@ -4,7 +4,7 @@ import datetime
 import inject
 from datetime import datetime
 
-from letsfuk.db.models import Message as DbMessage, User, Station, Subscriber
+from letsfuk.db.models import Message as DbMessage, User, Subscriber
 from letsfuk.models.user import UserNotFound
 
 
@@ -48,7 +48,7 @@ class Message(object):
     @classmethod
     def string_to_datetime(cls, sent_at):
         try:
-            sent_at = datetime.strptime(sent_at, '%b %d %Y %H:%M')
+            sent_at = datetime.strptime(sent_at, '%b %d %Y %H:%M:%S.%f')
         except ValueError as _:
             raise InvalidMessagePayload("Invalid sent_at attribute")
         return sent_at

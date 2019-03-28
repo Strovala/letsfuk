@@ -8,18 +8,14 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 class TestMessages(BaseAsyncHTTPTestCase):
     def prepare_for_sending_message_to_station(self):
         session, user = self.ensure_login()
-        lat = self.generator.latitude.generate()
-        lon = self.generator.longitude.generate()
-        station = self.add_station(lat=lat, lon=lon)
+        station = self.add_station()
         _ = self.subscribe(station.station_id, user.user_id)
         return session, user, station
 
     def prepare_for_sending_message_to_user(self):
         session, user = self.ensure_login()
         receiver = self.ensure_register()
-        lat = self.generator.latitude.generate()
-        lon = self.generator.longitude.generate()
-        station = self.add_station(lat=lat, lon=lon)
+        station = self.add_station()
         _ = self.subscribe(station.station_id, user.user_id)
         _ = self.subscribe(station.station_id, receiver.user_id)
         return session, user, receiver, station
@@ -28,7 +24,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         session, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         body = {
             "text": text,
             "sent_at": now_string
@@ -43,7 +39,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M'))
+        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M:%S.%f'))
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(station.station_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
@@ -53,7 +49,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         session, user, receiver, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         body = {
             "text": text,
             "sent_at": now_string,
@@ -69,7 +65,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M'))
+        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M:%S.%f'))
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(receiver.user_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
@@ -79,7 +75,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         fake_user_id = self.generator.uuid.generate()
         body = {
             "text": text,
@@ -100,7 +96,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         _, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         body = {
             "text": text,
             "sent_at": now_string
@@ -118,7 +114,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         for _ in range(4):
             text += text
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         body = {
             "text": text,
             "sent_at": now_string
@@ -137,7 +133,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
         now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M')
+        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
         body = {
             "text": text,
             "sent_at": now_string + "/"
@@ -151,3 +147,55 @@ class TestMessages(BaseAsyncHTTPTestCase):
             }
         )
         self.assertEqual(response.code, 400)
+
+    def test_get_messages_from_station(self):
+        session, user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        messages = self.make_station_chat(station)
+        offset, limit = 5, 10
+        response = self.fetch(
+            '/messages?offset={}&limit={}'.format(offset, limit),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
+        messages = messages[offset:limit]
+        response_messages = response_body.get('messages')
+        self.assertEqual(len(response_messages), len(messages))
+        for i in range(len(response_messages)):
+            response_message = response_messages[i]
+            message = messages[i]
+            self.assertEqual(message.text, response_message.text)
+            self.assertEqual(message.sent_at, response_message.sent_at)
+
+    def test_get_messages_from_private_chat(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        messages = self.make_private_chat(user, another_user)
+        offset, limit = 5, 10
+        response = self.fetch(
+            '/messages?offset={}&limit={}'.format(offset, limit),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
+        messages = messages[offset:limit]
+        response_messages = response_body.get('messages')
+        self.assertEqual(len(response_messages), len(messages))
+        for i in range(len(response_messages)):
+            response_message = response_messages[i]
+            message = messages[i]
+            self.assertEqual(message.text, response_message.text)
+            self.assertEqual(message.sent_at, response_message.sent_at)
