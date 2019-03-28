@@ -5,9 +5,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.hybrid import hybrid_method
-from tornado_sqlalchemy import declarative_base
 
-Base = declarative_base()
+from letsfuk.db import commit, Base
 
 
 class Station(Base):
@@ -26,6 +25,12 @@ class Station(Base):
         Numeric(10, 6), index=True, nullable=False,
         name='longitude'
     )
+
+    @classmethod
+    def query_by_station_id(cls, db, station_id):
+        return db.query(cls).filter(
+            cls.station_id == station_id
+        ).first()
 
     @classmethod
     def add(cls, db, station_id, lat, lon):
@@ -256,5 +261,63 @@ class Subscriber(Base):
         return (
             '<id: {} station_id: {} user_id: {}>'.format(
                 self.id, self.station_id, self.user_id
+            )
+        )
+
+
+class Message(Base):
+    __tablename__ = 'messages'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message_id = Column(UUID, index=True, nullable=False, unique=True)
+    station_id = Column(
+        UUID, ForeignKey('stations.station_id'), nullable=True
+    )
+    user_id = Column(
+        UUID, ForeignKey('users.user_id'), nullable=True
+    )
+    sent_at = Column(DateTime, nullable=False)
+    text = Column(String(600), nullable=False)
+
+    @classmethod
+    def resolve_receiver(cls, db, receiver_id):
+        user = User.query_by_user_id(db, receiver_id)
+        user_id = None
+        if user is not None:
+            user_id = user.user_id
+        station = Station.query_by_station_id(db, receiver_id)
+        station_id = None
+        if station is not None:
+            station_id = station.station_id
+        return station_id, user_id
+
+    @classmethod
+    def add(
+            cls, db, message_id, receiver_id, sender_id, text, sent_at
+    ):
+        station_id, user_id = cls.resolve_receiver(db, receiver_id)
+        message = Message(
+            message_id=message_id,
+            station_id=station_id,
+            user_id=user_id,
+            sender_id=sender_id,
+            text=text,
+            sent_at=sent_at
+        )
+        db.add(message)
+        commit(db)
+        return message
+
+    def to_dict(self):
+        return {
+            "message_id": self.message_id,
+            "receiver_id": self.receiver_id,
+            "sender_id": self.sender_id,
+        }
+
+    def __repr__(self):
+        return (
+            '<id: {} message_id: {} receiver_id: {} sender_id: {}>'.format(
+                self.id, self.message_id, self.receiver_id, self.sender_id
             )
         )
