@@ -5,8 +5,8 @@ import bcrypt
 import inject
 
 from letsfuk import Config
-from letsfuk.db.session import Session
-from letsfuk.db.user import User
+from letsfuk.db.models import Session
+from letsfuk.db.models import User
 
 
 class WrongCredentials(Exception):

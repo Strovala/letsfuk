@@ -7,8 +7,8 @@ import inject
 from sqlalchemy.exc import IntegrityError
 
 from letsfuk.config import Config
-from letsfuk.db.session import Session
-from letsfuk.db.user import User
+from letsfuk.db.models import Session
+from letsfuk.db.models import User
 from letsfuk.errors import HttpException, InternalError
 
 

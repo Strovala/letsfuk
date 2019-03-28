@@ -1,8 +1,8 @@
 import uuid
 
 import inject
-from letsfuk.db.station import Station as DbStation
-from letsfuk.db.subscriber import Subscriber as DbSubscriber
+from letsfuk.db.models import Station as DbStation
+from letsfuk.db.models import Subscriber as DbSubscriber
 
 
 class InvalidLatitude(Exception):

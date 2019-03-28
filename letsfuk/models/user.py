@@ -4,7 +4,7 @@ import uuid
 import bcrypt
 import inject
 
-from letsfuk.db.user import User as DbUser
+from letsfuk.db.models import User as DbUser
 
 
 class InvalidRegistrationPayload(Exception):

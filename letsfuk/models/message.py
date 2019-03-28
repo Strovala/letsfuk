@@ -2,7 +2,7 @@ import uuid
 
 import inject
 
-from letsfuk.db.message import Message as DbMessage
+from letsfuk.db.models import Message as DbMessage
 
 
 class InvalidRegistrationPayload(Exception):
