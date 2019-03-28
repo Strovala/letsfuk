@@ -8,8 +8,11 @@ from math import sqrt
 import letsfuk
 from tornado.testing import AsyncHTTPTestCase
 
-from letsfuk.db.models import Base, Station, User, Session
 from letsfuk.models.user import User as UserModel
+from letsfuk.db import Base
+from letsfuk.db.station import Station
+from letsfuk.db.user import User
+from letsfuk.db.session import Session
 from letsfuk.ioc import testing_configuration
 
 # Set up database for all tests

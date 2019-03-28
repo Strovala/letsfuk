@@ -8,7 +8,7 @@ from tornado_sqlalchemy import make_session_factory
 
 from letsfuk import ioc
 from letsfuk.config import Config
-from letsfuk.db.models import Base
+from letsfuk.db import Base
 from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.messages import MessageHandler
