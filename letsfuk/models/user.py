@@ -29,6 +29,8 @@ class User(object):
 
     @classmethod
     def validate_username(cls, username):
+        if username is None:
+            raise InvalidRegistrationPayload("Invalid username")
         username_regex = '^\w+$'
         matching = re.match(username_regex, username)
         if not matching or not (3 <= len(username) <= 16):
@@ -36,6 +38,8 @@ class User(object):
 
     @classmethod
     def validate_email(cls, email):
+        if email is None:
+            raise InvalidRegistrationPayload("Invalid email")
         email_regex = (
             '^([a-zA-Z0-9_\-\.]+)'
             '@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$'
@@ -46,6 +50,8 @@ class User(object):
 
     @classmethod
     def validate_password(cls, password):
+        if password is None:
+            raise InvalidRegistrationPayload("Invalid password")
         password_regex = '^.*$'
         matching = re.match(password_regex, password)
         if not matching:
@@ -53,9 +59,9 @@ class User(object):
 
     @classmethod
     def validate_registration_payload(cls, payload):
-        username = payload.get("username", "")
-        email = payload.get("email", "")
-        password = payload.get("password", "")
+        username = payload.get("username")
+        email = payload.get("email")
+        password = payload.get("password")
         cls.validate_username(username)
         cls.validate_email(email)
         cls.validate_password(password)

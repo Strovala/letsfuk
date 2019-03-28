@@ -5,44 +5,63 @@ import inject
 from datetime import datetime
 
 from letsfuk.db.models import Message as DbMessage, User, Station, Subscriber
+from letsfuk.models.user import UserNotFound
 
 
-class InvalidRegistrationPayload(Exception):
-    pass
-
-
-class UserAlreadyExists(Exception):
-    pass
-
-
-class UserNotFound(Exception):
+class InvalidMessagePayload(Exception):
     pass
 
 
 class Message(object):
     @classmethod
-    def resolve_receiver(cls, db, receiver_id):
-        user = User.query_by_user_id(db, receiver_id)
-        user_id = None
-        if user is not None:
-            user_id = user.user_id
-        station = Station.query_by_station_id(db, receiver_id)
-        station_id = None
-        if station is not None:
-            station_id = station.station_id
-        return station_id, user_id
+    def verify_receiver(cls, user_id):
+        db = inject.instance('db')
+        if user_id is not None:
+            user = User.query_by_user_id(db, user_id)
+            if user is None:
+                raise UserNotFound(
+                    "There is no user with user id: {}".format(user_id)
+                )
+
+    @classmethod
+    def verify_text(cls, text):
+        if text is None:
+            raise InvalidMessagePayload("Invalid text")
+        if len(text) > 600:
+            raise InvalidMessagePayload("Text too long, 600 chars is enough")
+
+    @classmethod
+    def verify_sent_at(cls, sent_at):
+        if sent_at is None:
+            raise InvalidMessagePayload("Invalid sent_at attribute")
+        _ = cls.string_to_datetime(sent_at)
+
+    @classmethod
+    def verify_payload(cls, payload):
+        sent_at = payload.get("sent_at")
+        text = payload.get("text")
+        user_id = payload.get("user_id")
+        cls.verify_sent_at(sent_at)
+        cls.verify_text(text)
+        cls.verify_receiver(user_id)
+
+    @classmethod
+    def string_to_datetime(cls, sent_at):
+        try:
+            sent_at = datetime.strptime(sent_at, '%b %d %Y %H:%M')
+        except ValueError as _:
+            raise InvalidMessagePayload("Invalid sent_at attribute")
+        return sent_at
 
     @classmethod
     def add(cls, payload, sender):
         db = inject.instance('db')
         user_id = payload.get("user_id")
         sent_at_string = payload.get("sent_at")
-        sent_at = datetime.strptime(sent_at_string, '%b %d %Y %H:%M')
         text = payload.get("text")
+        sent_at = cls.string_to_datetime(sent_at_string)
         station = Subscriber.get_station_for_user(db, sender.user_id)
-        station_id = None
-        if user_id is None:
-            station_id = station.station_id
+        station_id = station.station_id if user_id is None else None
         message_id = str(uuid.uuid4())
         message = DbMessage.add(
             db, message_id, station_id, user_id,
