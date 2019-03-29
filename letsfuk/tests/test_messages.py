@@ -165,6 +165,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
         end = limit + offset
         if end > len(messages):
             end = len(messages)
@@ -185,10 +186,13 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_get_messages_from_private_chat(self):
         session, user = self.ensure_login()
         _, another_user = self.ensure_login()
+        _, third_user = self.ensure_login()
         station = self.add_station()
         self.subscribe(station.station_id, user.user_id)
         self.subscribe(station.station_id, another_user.user_id)
+        self.subscribe(station.station_id, third_user.user_id)
         messages = self.make_private_chat(user, another_user)
+        _ = self.make_private_chat(user, third_user)
         offset, limit = 5, 10
         response = self.fetch(
             '/messages/{}?offset={}&limit={}'.format(
@@ -201,6 +205,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
         end = limit + offset
         if end > len(messages):
             end = len(messages)
@@ -237,6 +242,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
         end = limit + offset
         if end > len(messages):
             end = len(messages)
@@ -273,6 +279,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
         end = limit + offset
         if end > len(messages):
             end = len(messages)
@@ -309,6 +316,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
+        messages = list(reversed(messages))
         end = limit + offset
         if end > len(messages):
             end = len(messages)

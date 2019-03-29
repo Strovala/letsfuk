@@ -1,9 +1,8 @@
 from sqlalchemy import (
     Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
-    func, or_
-)
+    func, or_, desc,
+    and_)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.hybrid import hybrid_method
 
 from letsfuk.db import commit, Base
@@ -322,17 +321,23 @@ class Message(Base):
     def get_for_station(cls, db, station_id, offset, limit):
         messages = db.query(cls).filter(
             cls.station_id == station_id
-        ).offset(offset).limit(limit).all()
+        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return messages
 
     @classmethod
     def get_for_user(cls, db, user_id, sender_id, offset, limit):
         messages = db.query(cls).filter(
             or_(
-                cls.user_id == user_id,
-                cls.user_id == sender_id
+                and_(
+                    cls.user_id == user_id,
+                    cls.sender_id == sender_id,
+                ),
+                and_(
+                    cls.user_id == sender_id,
+                    cls.sender_id == user_id,
+                ),
             )
-        ).offset(offset).limit(limit).all()
+        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return messages
 
     def to_dict(self):
