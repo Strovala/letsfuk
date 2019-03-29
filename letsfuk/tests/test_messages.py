@@ -155,7 +155,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         messages = self.make_station_chat(station)
         offset, limit = 5, 10
         response = self.fetch(
-            '/messages?offset={}&limit={}'.format(offset, limit),
+            '/messages/{}?offset={}&limit={}'.format(
+                station.station_id, offset, limit
+            ),
             method="GET",
             headers={
                 "session-id": session.session_id
@@ -163,15 +165,22 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        messages = list(reversed(messages))
-        messages = messages[offset:limit]
+        end = limit + offset
+        if end > len(messages):
+            end = len(messages)
+        if offset >= len(messages):
+            messages = []
+        else:
+            messages = messages[offset:end]
         response_messages = response_body.get('messages')
         self.assertEqual(len(response_messages), len(messages))
         for i in range(len(response_messages)):
             response_message = response_messages[i]
             message = messages[i]
-            self.assertEqual(message.text, response_message.text)
-            self.assertEqual(message.sent_at, response_message.sent_at)
+            self.assertEqual(message.text, response_message.get('text'))
+            self.assertEqual(
+                str(message.sent_at), response_message.get('sent_at')
+            )
 
     def test_get_messages_from_private_chat(self):
         session, user = self.ensure_login()
@@ -182,7 +191,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         messages = self.make_private_chat(user, another_user)
         offset, limit = 5, 10
         response = self.fetch(
-            '/messages?offset={}&limit={}'.format(offset, limit),
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
             method="GET",
             headers={
                 "session-id": session.session_id
@@ -190,12 +201,201 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        messages = list(reversed(messages))
-        messages = messages[offset:limit]
+        end = limit + offset
+        if end > len(messages):
+            end = len(messages)
+        if offset >= len(messages):
+            messages = []
+        else:
+            messages = messages[offset:end]
         response_messages = response_body.get('messages')
         self.assertEqual(len(response_messages), len(messages))
         for i in range(len(response_messages)):
             response_message = response_messages[i]
             message = messages[i]
-            self.assertEqual(message.text, response_message.text)
-            self.assertEqual(message.sent_at, response_message.sent_at)
+            self.assertEqual(message.text, response_message.get('text'))
+            self.assertEqual(
+                str(message.sent_at), response_message.get('sent_at')
+            )
+
+    def test_get_messages_default_limit_offset(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        messages = self.make_private_chat(user, another_user)
+        offset, limit = 0, 20
+        response = self.fetch(
+            '/messages/{}?'.format(
+                another_user.user_id
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        end = limit + offset
+        if end > len(messages):
+            end = len(messages)
+        if offset >= len(messages):
+            messages = []
+        else:
+            messages = messages[offset:end]
+        response_messages = response_body.get('messages')
+        self.assertEqual(len(response_messages), len(messages))
+        for i in range(len(response_messages)):
+            response_message = response_messages[i]
+            message = messages[i]
+            self.assertEqual(message.text, response_message.get('text'))
+            self.assertEqual(
+                str(message.sent_at), response_message.get('sent_at')
+            )
+
+    def test_get_messages_limit_goes_out_of_bounds(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        messages = self.make_private_chat(user, another_user)
+        offset, limit = 19, 10
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        end = limit + offset
+        if end > len(messages):
+            end = len(messages)
+        if offset >= len(messages):
+            messages = []
+        else:
+            messages = messages[offset:end]
+        response_messages = response_body.get('messages')
+        self.assertEqual(len(response_messages), len(messages))
+        for i in range(len(response_messages)):
+            response_message = response_messages[i]
+            message = messages[i]
+            self.assertEqual(message.text, response_message.get('text'))
+            self.assertEqual(
+                str(message.sent_at), response_message.get('sent_at')
+            )
+
+    def test_get_messages_offset_goes_out_of_bounds(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        messages = self.make_private_chat(user, another_user)
+        offset, limit = 30, 10
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        end = limit + offset
+        if end > len(messages):
+            end = len(messages)
+        if offset >= len(messages):
+            messages = []
+        else:
+            messages = messages[offset:end]
+        response_messages = response_body.get('messages')
+        self.assertEqual(len(response_messages), len(messages))
+        for i in range(len(response_messages)):
+            response_message = response_messages[i]
+            message = messages[i]
+            self.assertEqual(message.text, response_message.get('text'))
+            self.assertEqual(
+                str(message.sent_at), response_message.get('sent_at')
+            )
+
+    def test_get_messages_unauthorized(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        _ = self.make_private_chat(user, another_user)
+        offset, limit = 'random', 5
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
+            method="GET"
+        )
+        self.assertEqual(response.code, 401)
+
+    def test_get_messages_invalid_offset(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        _ = self.make_private_chat(user, another_user)
+        offset, limit = 'random', 5
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 400)
+
+    def test_get_messages_invalid_limit(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        _ = self.make_private_chat(user, another_user)
+        offset, limit = 5, 6.9
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                another_user.user_id, offset, limit
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 400)
+
+    def test_get_messages_invalid_receiver(self):
+        session, user = self.ensure_login()
+        _, another_user = self.ensure_login()
+        station = self.add_station()
+        self.subscribe(station.station_id, user.user_id)
+        self.subscribe(station.station_id, another_user.user_id)
+        _ = self.make_private_chat(user, another_user)
+        offset, limit = 5, 10
+        random_receiver = self.generator.uuid.generate()
+        response = self.fetch(
+            '/messages/{}?offset={}&limit={}'.format(
+                random_receiver, offset, limit
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 404)

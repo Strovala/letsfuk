@@ -149,6 +149,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             * * *
             * * *
         """
+        # Drop database to ensure these are only stations
+        eng = inject.instance('db_engine')
+        Base.metadata.drop_all(bind=eng)
+        Base.metadata.create_all(engine)
         stations = [
             self.add_station(-wide, wide), self.add_station(0, wide),
             self.add_station(wide, wide),
@@ -192,8 +196,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.now()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = Message.add(
-            db, message_id, None, receiver_id, sender_id, text, now
+        message = Message.add_to_user(
+            db, message_id, receiver_id, sender_id, text, now
         )
         return message
 
@@ -204,8 +208,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.now()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = Message.add(
-            db, message_id, receiver_id, None, sender_id, text, now
+        message = Message.add_to_station(
+            db, message_id, receiver_id, sender_id, text, now
         )
         return message
 
@@ -220,13 +224,9 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         return messages
 
     def make_private_chat(self, user, another_user):
-        couple_of_messages = [
-            self.add_private_message(user.user_id, another_user.user_id),
-            self.add_private_message(another_user.user_id, user.user_id),
-            self.add_private_message(user.user_id, another_user.user_id),
-            self.add_private_message(user.user_id, another_user.user_id),
-            self.add_private_message(another_user.user_id, user.user_id),
+        messages = [
+            self.add_private_message(user_a.user_id, user_b.user_id)
+            for _ in range(10)
+            for user_a, user_b in [(user, another_user), (another_user, user)]
         ]
-        messages = []
-        [messages.extend(couple_of_messages) for _ in range(4)]
         return messages

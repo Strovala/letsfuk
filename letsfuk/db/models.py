@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
-    func
+    func, or_
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError
@@ -40,11 +40,7 @@ class Station(Base):
             _longitude=lon
         )
         db.add(station)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return station
 
     @hybrid_method
@@ -102,11 +98,7 @@ class User(Base):
             email=email
         )
         db.add(user)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return user
 
     @classmethod
@@ -155,11 +147,7 @@ class Session(Base):
     @classmethod
     def update_expiring(cls, db, session, expires_at):
         session.expires_at = expires_at
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return session
 
     @classmethod
@@ -170,21 +158,13 @@ class Session(Base):
             expires_at=expires_at
         )
         db.add(sess)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return sess
 
     @classmethod
     def delete(cls, db, session):
         db.delete(session)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return session
 
     @classmethod
@@ -244,11 +224,7 @@ class Subscriber(Base):
             user_id=user_id
         )
         db.add(subscriber)
-        try:
-            db.commit()
-        except IntegrityError as e:
-            db.rollback()
-            raise e
+        commit(db)
         return subscriber
 
     def to_dict(self):
@@ -286,9 +262,40 @@ class Message(Base):
     def add(
             cls, db, message_id, station_id, user_id, sender_id, text, sent_at
     ):
+        if user_id is not None:
+            message = cls.add_to_user(
+                db, message_id, user_id, sender_id, text, sent_at
+            )
+            return message
+        elif station_id is not None:
+            message = cls.add_to_station(
+                db, message_id, station_id, sender_id, text, sent_at
+            )
+            return message
+
+    @classmethod
+    def add_to_station(
+            cls, db, message_id, station_id, sender_id, text, sent_at
+    ):
         message = Message(
             message_id=message_id,
             station_id=station_id,
+            user_id=None,
+            sender_id=sender_id,
+            text=text,
+            sent_at=sent_at
+        )
+        db.add(message)
+        commit(db)
+        return message
+
+    @classmethod
+    def add_to_user(
+            cls, db, message_id, user_id, sender_id, text, sent_at
+    ):
+        message = Message(
+            message_id=message_id,
+            station_id=None,
             user_id=user_id,
             sender_id=sender_id,
             text=text,
@@ -297,6 +304,36 @@ class Message(Base):
         db.add(message)
         commit(db)
         return message
+
+    @classmethod
+    def get(cls, db, receiver_id, sender_id, offset, limit):
+        user = User.query_by_user_id(db, receiver_id)
+        station = Station.query_by_station_id(db, receiver_id)
+        if user is not None:
+            messages = cls.get_for_user(
+                db, receiver_id, sender_id, offset, limit
+            )
+            return messages
+        if station is not None:
+            messages = cls.get_for_station(db, receiver_id, offset, limit)
+            return messages
+
+    @classmethod
+    def get_for_station(cls, db, station_id, offset, limit):
+        messages = db.query(cls).filter(
+            cls.station_id == station_id
+        ).offset(offset).limit(limit).all()
+        return messages
+
+    @classmethod
+    def get_for_user(cls, db, user_id, sender_id, offset, limit):
+        messages = db.query(cls).filter(
+            or_(
+                cls.user_id == user_id,
+                cls.user_id == sender_id
+            )
+        ).offset(offset).limit(limit).all()
+        return messages
 
     def to_dict(self):
         receiver_id = self.station_id

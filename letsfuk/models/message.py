@@ -4,7 +4,7 @@ import datetime
 import inject
 from datetime import datetime
 
-from letsfuk.db.models import Message as DbMessage, User, Subscriber
+from letsfuk.db.models import Message as DbMessage, User, Subscriber, Station
 from letsfuk.models.user import UserNotFound
 
 
@@ -12,9 +12,17 @@ class InvalidMessagePayload(Exception):
     pass
 
 
+class InvalidLimitOffset(Exception):
+    pass
+
+
+class ReceiverNotFound(Exception):
+    pass
+
+
 class Message(object):
     @classmethod
-    def verify_receiver(cls, user_id):
+    def verify_add_message_receiver(cls, user_id):
         db = inject.instance('db')
         if user_id is not None:
             user = User.query_by_user_id(db, user_id)
@@ -37,13 +45,40 @@ class Message(object):
         _ = cls.string_to_datetime(sent_at)
 
     @classmethod
-    def verify_payload(cls, payload):
+    def verify_add_message_payload(cls, payload):
         sent_at = payload.get("sent_at")
         text = payload.get("text")
         user_id = payload.get("user_id")
         cls.verify_sent_at(sent_at)
         cls.verify_text(text)
-        cls.verify_receiver(user_id)
+        cls.verify_add_message_receiver(user_id)
+
+    @classmethod
+    def convert_param(cls, formatted_value):
+        value = int(formatted_value[0])
+        return value
+
+    @classmethod
+    def verify_param(cls, value):
+        if value is not None:
+            if not isinstance(value, list):
+                raise InvalidLimitOffset("Invalid parameter")
+            try:
+                _ = int(value[0])
+            except ValueError as _:
+                raise InvalidLimitOffset("Invalid parameter")
+
+    @classmethod
+    def verify_params(cls, params):
+        offset = params.get("offset")
+        limit = params.get("limit")
+        cls.verify_param(offset)
+        cls.verify_param(limit)
+
+    @classmethod
+    def verify_get_messages_payload(cls, receiver_id, params):
+        cls.verify_params(params)
+        cls.verify_get_messages_receiver(receiver_id)
 
     @classmethod
     def string_to_datetime(cls, sent_at):
@@ -52,6 +87,16 @@ class Message(object):
         except ValueError as _:
             raise InvalidMessagePayload("Invalid sent_at attribute")
         return sent_at
+
+    @classmethod
+    def verify_get_messages_receiver(cls, receiver_id):
+        db = inject.instance('db')
+        user = User.query_by_user_id(db, receiver_id)
+        station = Station.query_by_station_id(db, receiver_id)
+        if user is None and station is None:
+            raise ReceiverNotFound(
+                "There is not receiver_id: {}".format(receiver_id)
+            )
 
     @classmethod
     def add(cls, payload, sender):
@@ -68,3 +113,14 @@ class Message(object):
             sender.user_id, text, sent_at
         )
         return message
+
+    @classmethod
+    def get(cls, receiver_id, sender_id, params):
+        # In this format query params are packed
+        offset_formatted =  params.get("offset", [b'0'])
+        limit_formatted =  params.get("limit", [b'20'])
+        offset = cls.convert_param(offset_formatted)
+        limit = cls.convert_param(limit_formatted)
+        db = inject.instance('db')
+        messages = DbMessage.get(db, receiver_id, sender_id, offset, limit)
+        return messages
