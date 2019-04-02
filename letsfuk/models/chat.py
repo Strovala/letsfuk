@@ -4,7 +4,8 @@ import datetime
 import inject
 from datetime import datetime
 
-from letsfuk.db.models import Message as DbMessage, User, Subscriber, Station
+from letsfuk.db.models import User, Subscriber, Station, PrivateChat, \
+    StationChat
 from letsfuk.models.user import UserNotFound
 
 
@@ -20,7 +21,7 @@ class ReceiverNotFound(Exception):
     pass
 
 
-class Message(object):
+class Chat(object):
     @classmethod
     def verify_add_message_receiver(cls, user_id):
         db = inject.instance('db')
@@ -106,11 +107,14 @@ class Message(object):
         text = payload.get("text")
         sent_at = cls.string_to_datetime(sent_at_string)
         station = Subscriber.get_station_for_user(db, sender.user_id)
-        station_id = station.station_id if user_id is None else None
         message_id = str(uuid.uuid4())
-        message = DbMessage.add(
-            db, message_id, station_id, user_id,
-            sender.user_id, text, sent_at
+        if user_id is not None:
+            message = PrivateChat.add(
+                db, message_id, user_id, sender.user_id, text, sent_at
+            )
+            return message
+        message = StationChat.add(
+            db, message_id, station.station_id, sender.user_id, text, sent_at
         )
         return message
 
@@ -122,5 +126,13 @@ class Message(object):
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         db = inject.instance('db')
-        messages = DbMessage.get(db, receiver_id, sender_id, offset, limit)
-        return messages
+        station = Station.query_by_station_id(db, receiver_id)
+        if station is not None:
+            station_chat = StationChat.get(
+                db, station.station_id, offset, limit
+            )
+            return station_chat
+        private_chat = PrivateChat.get(
+            db, receiver_id, sender_id, offset, limit
+        )
+        return private_chat

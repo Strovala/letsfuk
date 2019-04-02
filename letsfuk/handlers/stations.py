@@ -11,8 +11,8 @@ from letsfuk.models.station import (
 
 class StationsHandler(BaseHandler):
     @endpoint_wrapper()
-    @check_session()
     @map_exception(out_of=(InvalidLatitude, InvalidLongitude), make=BadRequest)
+    @check_session()
     @resolve_body()
     def post(self):
         Station.validate_location(self.request.body)
@@ -22,6 +22,7 @@ class StationsHandler(BaseHandler):
 
 class SubscribeHandler(BaseHandler):
     @endpoint_wrapper()
+    @map_exception(out_of=(InvalidLatitude, InvalidLongitude), make=BadRequest)
     @check_session()
     @resolve_user()
     @resolve_body()

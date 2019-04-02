@@ -10,7 +10,7 @@ from tornado.testing import AsyncHTTPTestCase
 
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base
-from letsfuk.db.models import Station, Subscriber, Message
+from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
 from letsfuk.ioc import testing_configuration
@@ -196,7 +196,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.now()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = Message.add_to_user(
+        message = PrivateChat.add(
             db, message_id, receiver_id, sender_id, text, now
         )
         return message
@@ -208,7 +208,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.now()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = Message.add_to_station(
+        message = StationChat.add(
             db, message_id, receiver_id, sender_id, text, now
         )
         return message

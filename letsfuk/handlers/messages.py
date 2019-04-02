@@ -4,8 +4,8 @@ from letsfuk.decorators import (
 )
 from letsfuk.errors import BadRequest, NotFound
 from letsfuk.handlers import BaseHandler
-from letsfuk.models.message import (
-    Message, InvalidMessagePayload,
+from letsfuk.models.chat import (
+    Chat, InvalidMessagePayload,
     InvalidLimitOffset,
     ReceiverNotFound
 )
@@ -20,26 +20,26 @@ class MessagesHandler(BaseHandler):
     @resolve_user()
     @resolve_body()
     def post(self):
-        Message.verify_add_message_payload(self.request.body)
-        message = Message.add(
+        Chat.verify_add_message_payload(self.request.body)
+        chat = Chat.add(
             self.request.body, self.request.user
         )
-        return message.to_dict(), 200
+        return chat.to_dict(), 200
 
 
-class StationMessagesHandler(BaseHandler):
+class ChatMessagesHandler(BaseHandler):
     @endpoint_wrapper()
     @map_exception(out_of=InvalidLimitOffset, make=BadRequest)
     @map_exception(out_of=ReceiverNotFound, make=NotFound)
     @check_session()
     @resolve_user()
     def get(self, receiver_id):
-        Message.verify_get_messages_payload(
+        Chat.verify_get_messages_payload(
             receiver_id, self.request.arguments
         )
-        messages = Message.get(
+        chat = Chat.get(
             receiver_id, self.request.user.user_id, self.request.arguments
         )
         return {
-            "messages": [message.to_dict() for message in messages]
+            "messages": [message.to_dict() for message in chat]
         }, 200

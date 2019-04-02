@@ -41,7 +41,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M:%S.%f'))
         self.assertEqual(text, response_body.get('text'))
-        self.assertEqual(station.station_id, response_body.get('receiver_id'))
+        self.assertEqual(station.station_id, response_body.get('station_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
         self.assertEqual(sent_at, response_body.get('sent_at'))
 
