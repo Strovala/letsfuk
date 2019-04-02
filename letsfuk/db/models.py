@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
-    func, or_, desc, and_
+    func, or_, and_, asc, desc
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
@@ -282,8 +282,33 @@ class PrivateChat(Base):
                     cls.sender_id == receiver_id,
                 ),
             )
-        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
+        ).order_by(asc(cls.sent_at)).offset(offset).limit(limit).all()
         return private_chat
+
+    @classmethod
+    def get_user_ids_for_user_id(cls, db, user_id, offset, limit):
+        user_ids_tuple = db.query(cls.receiver_id, cls.sender_id).filter(
+            or_(
+                cls.receiver_id == user_id,
+                cls.receiver_id == user_id,
+            )
+        ).order_by(desc(cls.sent_at)).all()
+        user_ids = []
+        for receiver_id, sender_id in user_ids_tuple:
+            if receiver_id != user_id:
+                if receiver_id not in user_ids:
+                    user_ids.append(receiver_id)
+            elif sender_id != user_id:
+                if sender_id not in user_ids:
+                    user_ids.append(sender_id)
+        end = limit + offset
+        if end > len(user_ids):
+            end = len(user_ids)
+        if offset >= len(user_ids):
+            user_ids = []
+        else:
+            user_ids = user_ids[offset:end]
+        return user_ids
 
     def to_dict(self):
         return {
@@ -307,7 +332,7 @@ class StationChat(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     message_id = Column(UUID, index=True, nullable=False, unique=True)
-    station_id = Column(
+    receiver_id = Column(
         UUID, ForeignKey('stations.station_id'), nullable=True
     )
     sender_id = Column(
@@ -318,11 +343,11 @@ class StationChat(Base):
 
     @classmethod
     def add(
-            cls, db, message_id, station_id, sender_id, text, sent_at
+            cls, db, message_id, receiver_id, sender_id, text, sent_at
     ):
         message = StationChat(
             message_id=message_id,
-            station_id=station_id,
+            receiver_id=receiver_id,
             sender_id=sender_id,
             text=text,
             sent_at=sent_at
@@ -332,16 +357,16 @@ class StationChat(Base):
         return message
 
     @classmethod
-    def get(cls, db, station_id, offset, limit):
+    def get(cls, db, receiver_id, offset, limit):
         messages = db.query(cls).filter(
-            cls.station_id == station_id
-        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
+            cls.receiver_id == receiver_id
+        ).order_by(asc(cls.sent_at)).offset(offset).limit(limit).all()
         return messages
 
     def to_dict(self):
         return {
             "message_id": self.message_id,
-            "station_id": self.station_id,
+            "receiver_id": self.receiver_id,
             "sender_id": self.sender_id,
             "sent_at": str(self.sent_at),
             "text": self.text
@@ -349,7 +374,7 @@ class StationChat(Base):
 
     def __repr__(self):
         return (
-            '<id: {} message_id: {} station_id: {} sender_id: {}>'.format(
-                self.id, self.message_id, self.station_id, self.sender_id
+            '<id: {} message_id: {} receiver_id: {} sender_id: {}>'.format(
+                self.id, self.message_id, self.receiver_id, self.sender_id
             )
         )

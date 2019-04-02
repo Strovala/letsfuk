@@ -128,11 +128,48 @@ class Chat(object):
         db = inject.instance('db')
         station = Station.query_by_station_id(db, receiver_id)
         if station is not None:
-            station_chat = StationChat.get(
+            messages = StationChat.get(
                 db, station.station_id, offset, limit
             )
+            station_chat = ChatResponse(station.station_id, messages)
             return station_chat
-        private_chat = PrivateChat.get(
+        messages = PrivateChat.get(
             db, receiver_id, sender_id, offset, limit
         )
+        private_chat = ChatResponse(receiver_id, messages)
         return private_chat
+
+    @classmethod
+    def get_multiple(cls, sender, params):
+        offset_formatted =  params.get("offset", [b'0'])
+        limit_formatted =  params.get("limit", [b'10'])
+        offset = cls.convert_param(offset_formatted)
+        limit = cls.convert_param(limit_formatted)
+        db = inject.instance('db')
+        station = Subscriber.get_station_for_user(db, sender.user_id)
+        station_chat = cls.get(
+            station.station_id, sender.user_id, {}
+        )
+        chat_user_ids = PrivateChat.get_user_ids_for_user_id(
+            db, sender.user_id, offset, limit
+        )
+        private_chats = []
+        for receiver_id in chat_user_ids:
+            messages = PrivateChat.get(
+                db, receiver_id, sender.user_id, 0, 20
+            )
+            private_chat = ChatResponse(receiver_id, messages)
+            private_chats.append(private_chat)
+        return station_chat, private_chats
+
+
+class ChatResponse(object):
+    def __init__(self, receiver_id, messages):
+        self.receiver_id = receiver_id
+        self.messages = messages
+
+    def to_dict(self):
+        return {
+            "receiver_id": self.receiver_id,
+            "messages": [message.to_dict() for message in self.messages]
+        }

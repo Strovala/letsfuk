@@ -213,13 +213,14 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         )
         return message
 
-    def make_station_chat(self, station):
-        users = [self.ensure_login() for _ in range(5)]
-        [self.subscribe(station.station_id, user.user_id) for _, user in users]
+    def make_station_chat(self, station, users=None):
+        if users is None:
+            users = [self.ensure_register() for _ in range(5)]
+        [self.subscribe(station.station_id, user.user_id) for user in users]
         messages = [
             self.add_group_message(user.user_id, station.station_id)
             for _ in range(4)
-            for _, user in users
+            for user in users
         ]
         return messages
 
@@ -230,3 +231,27 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             for user_a, user_b in [(user, another_user), (another_user, user)]
         ]
         return messages
+
+    def make_chats(self):
+        session, user = self.ensure_login()
+        another_user = self.ensure_register()
+        third_user = self.ensure_register()
+        station = self.add_station()
+        station_chat = self.make_station_chat(
+            station, [user, another_user, third_user]
+        )
+        second_chat = self.make_private_chat(user, another_user)
+        # first because messages are sent later
+        first_chat = self.make_private_chat(third_user, user)
+        _ = self.make_private_chat(third_user, another_user)
+        private_chats = [
+            {
+                "receiver_id": third_user.user_id,
+                "messages": first_chat
+            },
+            {
+                "receiver_id": another_user.user_id,
+                "messages": second_chat
+            }
+        ]
+        return session, station_chat, private_chats
