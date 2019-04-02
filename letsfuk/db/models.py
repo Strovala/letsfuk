@@ -290,7 +290,7 @@ class PrivateChat(Base):
         user_ids_tuple = db.query(cls.receiver_id, cls.sender_id).filter(
             or_(
                 cls.receiver_id == user_id,
-                cls.receiver_id == user_id,
+                cls.sender_id == user_id,
             )
         ).order_by(desc(cls.sent_at)).all()
         user_ids = []
