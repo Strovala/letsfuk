@@ -9,6 +9,7 @@ from tornado_sqlalchemy import make_session_factory
 from letsfuk import ioc
 from letsfuk.config import Config
 from letsfuk.db import Base
+from letsfuk.handlers import DefaultHandler
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.messages import MessagesHandler, ChatMessagesHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
@@ -35,6 +36,7 @@ def make_app():
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
     ],
+        default_handler_class=DefaultHandler,
         session_factory=factory,
         debug=debug
     )
@@ -43,7 +45,6 @@ def make_app():
 def migrate():
     inject.configure(ioc.configuration)
     engine = inject.instance('db_engine')
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(engine)
     print("Migration successful!")
 

@@ -1,6 +1,8 @@
 import json
 
-from tornado.web import RequestHandler
+from sys import exc_info
+
+from tornado.web import RequestHandler, HTTPError
 from tornado_sqlalchemy import SessionMixin
 
 
@@ -27,7 +29,26 @@ class BaseHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write(json.dumps(data))
 
-    def send_error(self, status_code=500, **kwargs):
-        # super(BaseHandler, self).send_error(status_code, **kwargs)
-        print("Ajddeee")
-        print(status_code)
+    def write_error(self, status_code, **kwargs):
+        _, exc_obj, _ = exc_info()
+        if isinstance(exc_obj, HTTPError):
+            self.set_status(status_code)
+            response = json.dumps({
+                "error_message": str(exc_obj)
+            })
+            self.write(response)
+            self.finish()
+            # Maybe here we need return -\0/-
+        super(BaseHandler, self).write_error(status_code, **kwargs)
+
+
+class DefaultHandler(BaseHandler):
+    # Override prepare() instead of get() to cover all possible HTTP methods.
+    def prepare(self):
+        self.set_status(404)
+        response = json.dumps({
+            "error_message": "Route not found"
+        })
+        self.write(response)
+        self.finish()
+
