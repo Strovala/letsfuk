@@ -27,21 +27,7 @@ class BaseHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write(json.dumps(data))
 
-
-class InfoView(BaseHandler):
-    """Only allow GET requests."""
-    SUPPORTED_METHODS = ["GET"]
-
-    def set_default_headers(self):
-        """Set the default response header to be JSON."""
-        self.set_header("Content-Type", 'application/json; charset="utf-8"')
-
-    def get(self):
-        """List of routes for this API."""
-        routes = {
-            'register': 'POST /users',
-            'login': 'POST /auth/login',
-            'logout': 'POST /auth/logout',
-            "get user by username": 'GET /users/<username>',
-        }
-        self.write(json.dumps(routes))
+    def send_error(self, status_code=500, **kwargs):
+        # super(BaseHandler, self).send_error(status_code, **kwargs)
+        print("Ajddeee")
+        print(status_code)

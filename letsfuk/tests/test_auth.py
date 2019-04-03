@@ -51,6 +51,30 @@ class TestAuth(BaseAsyncHTTPTestCase):
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
 
+    def test_login_already_loggedin(self):
+        password = "Test123!"
+        session, loggedin_user = self.ensure_login(password=password)
+        body = {
+            "username": loggedin_user.username,
+            "password": password
+        }
+        response = self.fetch(
+            '/auth/login',
+            method="POST",
+            body=json.dumps(body).encode('utf-8')
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        user = response_body.get('user', dict())
+        username = user.get('username')
+        email = user.get('email')
+        user_id = user.get('user_id')
+        self.assertEqual(loggedin_user.username, username)
+        self.assertEqual(loggedin_user.email, email)
+        self.assertEqual(loggedin_user.user_id, user_id)
+        session_id = response_body.get('session_id')
+        self.assertEqual(session.session_id, session_id)
+
     def test_login_not_registered(self):
         body = {
             "username": "random_username",

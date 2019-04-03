@@ -20,6 +20,11 @@ class Conflict(HttpException):
         super(Conflict, self).__init__(text, 409)
 
 
+class Unauthorized(HttpException):
+    def __init__(self, text):
+        super(Unauthorized, self).__init__(text, 401)
+
+
 class InternalError(HttpException):
     def __init__(self, text):
         super(InternalError, self).__init__(text, 500)

@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from letsfuk.config import Config
 from letsfuk.db.models import Session
 from letsfuk.db.models import User
-from letsfuk.errors import HttpException, InternalError
+from letsfuk.errors import HttpException, InternalError, Unauthorized
 
 
 class Request(object):
@@ -100,9 +100,9 @@ def check_session(**kwargs):
                 else:
                     # logout logic
                     Session.delete(db, existing_session)
-                    return "You are successfully logged out", 200
+                    raise Unauthorized("Your session is expired")
                 self.request.session = existing_session
                 return func(self, *args, **kw)
-            return "Unauthorized", 401
+            raise Unauthorized("Unauthorized")
         return wrapper
     return dec

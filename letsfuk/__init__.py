@@ -9,7 +9,6 @@ from tornado_sqlalchemy import make_session_factory
 from letsfuk import ioc
 from letsfuk.config import Config
 from letsfuk.db import Base
-from letsfuk.handlers import InfoView
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.messages import MessagesHandler, ChatMessagesHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
@@ -27,7 +26,6 @@ def make_app():
     database_url = config.get('database_url')
     factory = make_session_factory(database_url)
     return Application([
-        ('/?', InfoView),
         ('/auth/login?', LoginHandler),
         ('/auth/logout?', LogoutHandler),
         ('/users?', UsersHandler),
