@@ -34,13 +34,12 @@ class Auth(object):
             raise WrongCredentials("Wrong username/email or password")
         existing_session = Session.query_by_user_id(db, user.user_id)
         if existing_session is not None:
-            # TODO: Write test for expiring session
             return user, existing_session.session_id
         session_id = str(uuid.uuid4())
         config = inject.instance(Config)
-        session_ttl = config.get('session_ttl', 30)
+        session_ttl = config.get('session_ttl', 30*60)
         now = datetime.datetime.now()
-        expires_at = now + datetime.timedelta(minutes=session_ttl)
+        expires_at = now + datetime.timedelta(seconds=session_ttl)
         _ = Session.add(db, session_id, user.user_id, expires_at)
         return user, session_id
 

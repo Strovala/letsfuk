@@ -1,3 +1,0 @@
-debug: true
-session_ttl: 30
-database_url: postgresql://letsfuk:root@localhost/letsfuk

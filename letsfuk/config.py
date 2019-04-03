@@ -17,3 +17,8 @@ class Config(object):
 
     def get(self, key, default=None):
         return self.data.get(key, default)
+
+    def set(self, key, value):
+        if key in self.data:
+            self.data[key] = value
+

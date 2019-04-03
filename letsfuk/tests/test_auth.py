@@ -151,3 +151,25 @@ class TestAuth(BaseAsyncHTTPTestCase):
             body=json.dumps(dict()).encode('utf-8')
         )
         self.assertEqual(response.code, 401)
+
+    def test_logout_session_expired(self):
+        import inject
+        import time
+        from letsfuk import Config
+        session_ttl_seconds = 2
+        config = inject.instance(Config)
+        config.set('session_ttl', session_ttl_seconds)
+        session, _ = self.ensure_login()
+        time.sleep(session_ttl_seconds + 1)
+        response = self.fetch(
+            '/auth/logout',
+            method="POST",
+            body=json.dumps(dict()).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 401)
+        response_body = json.loads(response.body.decode())
+        text = response_body.get('text')
+        self.assertAlmostEqual("Your session is expired", text)

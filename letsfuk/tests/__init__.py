@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import letsfuk
 from tornado.testing import AsyncHTTPTestCase
 
+from letsfuk import Config
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base
 from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat
@@ -121,12 +122,14 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
 
     def ensure_login(self, username=None, password="Test123!", email=None):
         db = inject.instance('db')
+        config = inject.instance(Config)
         registered_user = self.ensure_register(
             username=username, password=password, email=email
         )
         session_id = str(uuid.uuid4())
         now = datetime.now()
-        expires_at = now + timedelta(minutes=300)
+        session_ttl = config.get('session_ttl', 30*60)
+        expires_at = now + timedelta(seconds=session_ttl)
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
         )
