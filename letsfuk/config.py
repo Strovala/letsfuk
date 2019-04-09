@@ -21,4 +21,3 @@ class Config(object):
     def set(self, key, value):
         if key in self.data:
             self.data[key] = value
-
