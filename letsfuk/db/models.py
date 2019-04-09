@@ -45,8 +45,8 @@ class Station(Base):
     @hybrid_method
     def distance(self, lat, lon):
         return func.sqrt(
-            (self._latitude - lat)*(self._latitude - lat) +
-            (self._longitude - lon)*(self._longitude - lon)
+            (self._latitude - lat) * (self._latitude - lat) +
+            (self._longitude - lon) * (self._longitude - lon)
         )
 
     @classmethod
@@ -196,7 +196,9 @@ class Subscriber(Base):
     __tablename__ = 'subscribers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    station_id = Column(UUID, ForeignKey('stations.station_id'), nullable=False)
+    station_id = Column(
+        UUID, ForeignKey('stations.station_id'), nullable=False
+    )
     user_id = Column(
         UUID, ForeignKey('users.user_id'), index=True,
         nullable=False, unique=True

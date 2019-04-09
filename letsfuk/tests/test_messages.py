@@ -23,8 +23,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_to_station(self):
         session, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         body = {
             "text": text,
             "sent_at": now_string
@@ -39,7 +39,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M:%S.%f'))
+        sent_at = now_string
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(station.station_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
@@ -48,8 +48,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_to_user(self):
         session, user, receiver, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         body = {
             "text": text,
             "sent_at": now_string,
@@ -65,7 +65,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = str(datetime.strptime(now_string, '%b %d %Y %H:%M:%S.%f'))
+        sent_at = now_string
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(receiver.user_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
@@ -74,8 +74,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_to_user_invalid_user(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         fake_user_id = self.generator.uuid.generate()
         body = {
             "text": text,
@@ -95,8 +95,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_unauthorized(self):
         _, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         body = {
             "text": text,
             "sent_at": now_string
@@ -113,8 +113,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         text = self.generator.text.generate()
         for _ in range(4):
             text += text
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         body = {
             "text": text,
             "sent_at": now_string
@@ -132,11 +132,11 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_invalid_time(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
-        now = datetime.now()
-        now_string = now.strftime('%b %d %Y %H:%M:%S.%f')
+        now = datetime.utcnow()
+        now_string = str(now)
         body = {
             "text": text,
-            "sent_at": now_string + "/"
+            "sent_at": "qwerty" + now_string + "/"
         }
         response = self.fetch(
             '/messages',

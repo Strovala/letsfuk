@@ -37,8 +37,8 @@ class Auth(object):
             return user, existing_session.session_id
         session_id = str(uuid.uuid4())
         config = inject.instance(Config)
-        session_ttl = config.get('session_ttl', 30*60)
-        now = datetime.datetime.now()
+        session_ttl = config.get('session_ttl', 30 * 60)
+        now = datetime.datetime.utcnow()
         expires_at = now + datetime.timedelta(seconds=session_ttl)
         _ = Session.add(db, session_id, user.user_id, expires_at)
         return user, session_id

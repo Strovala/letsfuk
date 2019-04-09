@@ -1,8 +1,6 @@
 import uuid
-
-import datetime
+import dateutil.parser
 import inject
-from datetime import datetime
 
 from letsfuk.db.models import User, Subscriber, Station, PrivateChat, \
     StationChat
@@ -84,7 +82,7 @@ class Chat(object):
     @classmethod
     def string_to_datetime(cls, sent_at):
         try:
-            sent_at = datetime.strptime(sent_at, '%b %d %Y %H:%M:%S.%f')
+            sent_at = dateutil.parser.parse(sent_at)
         except ValueError as _:
             raise InvalidMessagePayload("Invalid sent_at attribute")
         return sent_at
@@ -121,8 +119,8 @@ class Chat(object):
     @classmethod
     def get(cls, receiver_id, sender_id, params):
         # In this format query params are packed
-        offset_formatted =  params.get("offset", [b'0'])
-        limit_formatted =  params.get("limit", [b'20'])
+        offset_formatted = params.get("offset", [b'0'])
+        limit_formatted = params.get("limit", [b'20'])
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         db = inject.instance('db')
@@ -141,8 +139,8 @@ class Chat(object):
 
     @classmethod
     def get_multiple(cls, sender, params):
-        offset_formatted =  params.get("offset", [b'0'])
-        limit_formatted =  params.get("limit", [b'10'])
+        offset_formatted = params.get("offset", [b'0'])
+        limit_formatted = params.get("limit", [b'10'])
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         db = inject.instance('db')

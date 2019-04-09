@@ -88,10 +88,10 @@ def check_session(**kwargs):
             existing_session = Session.query_by_session_id(db, session_id)
             if existing_session is not None:
                 # Check if session is expired
-                now = datetime.datetime.now()
+                now = datetime.datetime.utcnow()
                 if now < existing_session.expires_at:
                     config = inject.instance(Config)
-                    session_ttl = config.get('session_ttl', 30*60)
+                    session_ttl = config.get('session_ttl', 30 * 60)
                     expires_at = now + datetime.timedelta(seconds=session_ttl)
                     _ = Session.update_expiring(
                         db, existing_session, expires_at

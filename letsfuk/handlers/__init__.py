@@ -51,4 +51,3 @@ class DefaultHandler(BaseHandler):
         })
         self.write(response)
         self.finish()
-

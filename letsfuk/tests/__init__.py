@@ -79,8 +79,8 @@ class UsernameGenerator(Generator):
 
 class TextGenerator(Generator):
     letters = (
-            [chr(ord('a') + i) for i in range(26)] +
-            list(' !@#$%^&*./,>?|\'\\/')
+        [chr(ord('a') + i) for i in range(26)] +
+        list(' !@#$%^&*./,>?|\'\\/')
     )
 
     def _generate(self):
@@ -127,8 +127,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             username=username, password=password, email=email
         )
         session_id = str(uuid.uuid4())
-        now = datetime.now()
-        session_ttl = config.get('session_ttl', 30*60)
+        now = datetime.utcnow()
+        session_ttl = config.get('session_ttl', 30 * 60)
         expires_at = now + timedelta(seconds=session_ttl)
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
@@ -171,15 +171,15 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         closest_station_index = 0
         station = stations[closest_station_index]
         minimal_distance = sqrt(
-            (station.latitude - lat)*(station.latitude - lat) +
-            (station.longitude - lon)*(station.longitude - lon)
+            (station.latitude - lat) * (station.latitude - lat) +
+            (station.longitude - lon) * (station.longitude - lon)
         )
 
         for i in range(1, len(stations)):
             station = stations[i]
             distance = sqrt(
-                (station.latitude - lat)*(station.latitude - lat) +
-                (station.longitude - lon)*(station.longitude - lon)
+                (station.latitude - lat) * (station.latitude - lat) +
+                (station.longitude - lon) * (station.longitude - lon)
             )
             if distance < minimal_distance:
                 minimal_distance = distance
@@ -196,7 +196,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         db = inject.instance('db')
         message_id = self.generator.uuid.generate()
         text = self.generator.text.generate()
-        now = datetime.now()
+        now = datetime.utcnow()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
         message = PrivateChat.add(
@@ -208,7 +208,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         db = inject.instance('db')
         message_id = self.generator.uuid.generate()
         text = self.generator.text.generate()
-        now = datetime.now()
+        now = datetime.utcnow()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
         message = StationChat.add(
