@@ -3,6 +3,56 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 
 
 class TestAuth(BaseAsyncHTTPTestCase):
+    def test_login_with_username_provided_valid_email(self):
+        password = "Test123!"
+        registered_user = self.ensure_register(password=password)
+        body = {
+            "username": registered_user.username,
+            "email": registered_user.email,
+            "password": password
+        }
+        response = self.fetch(
+            '/auth/login',
+            method="POST",
+            body=json.dumps(body).encode('utf-8')
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        user = response_body.get('user', dict())
+        username = user.get('username')
+        email = user.get('email')
+        user_id = user.get('user_id')
+        self.assertEqual(registered_user.username, username)
+        self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
+        session_id = response_body.get('session_id')
+        self.assertIsNotNone(session_id)
+
+    def test_login_with_username_provided_wrong_email(self):
+        password = "Test123!"
+        registered_user = self.ensure_register(password=password)
+        body = {
+            "username": registered_user.username,
+            "email": registered_user.username,
+            "password": password
+        }
+        response = self.fetch(
+            '/auth/login',
+            method="POST",
+            body=json.dumps(body).encode('utf-8')
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        user = response_body.get('user', dict())
+        username = user.get('username')
+        email = user.get('email')
+        user_id = user.get('user_id')
+        self.assertEqual(registered_user.username, username)
+        self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
+        session_id = response_body.get('session_id')
+        self.assertIsNotNone(session_id)
+
     def test_login_with_username(self):
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
@@ -20,6 +70,56 @@ class TestAuth(BaseAsyncHTTPTestCase):
         user = response_body.get('user', dict())
         username = user.get('username')
         email = user.get('email')
+        user_id = user.get('user_id')
+        self.assertEqual(registered_user.username, username)
+        self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
+        session_id = response_body.get('session_id')
+        self.assertIsNotNone(session_id)
+
+    def test_login_with_email_provided_valid_username(self):
+        password = "Test123!"
+        registered_user = self.ensure_register(password=password)
+        body = {
+            "email": registered_user.email,
+            "username": registered_user.username,
+            "password": password
+        }
+        response = self.fetch(
+            '/auth/login',
+            method="POST",
+            body=json.dumps(body).encode('utf-8')
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        user = response_body.get('user', dict())
+        email = user.get('email')
+        username = user.get('username')
+        user_id = user.get('user_id')
+        self.assertEqual(registered_user.username, username)
+        self.assertEqual(registered_user.email, email)
+        self.assertEqual(registered_user.user_id, user_id)
+        session_id = response_body.get('session_id')
+        self.assertIsNotNone(session_id)
+
+    def test_login_with_email_provided_wrong_username(self):
+        password = "Test123!"
+        registered_user = self.ensure_register(password=password)
+        body = {
+            "email": registered_user.email,
+            "username": registered_user.email,
+            "password": password
+        }
+        response = self.fetch(
+            '/auth/login',
+            method="POST",
+            body=json.dumps(body).encode('utf-8')
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        user = response_body.get('user', dict())
+        email = user.get('email')
+        username = user.get('username')
         user_id = user.get('user_id')
         self.assertEqual(registered_user.username, username)
         self.assertEqual(registered_user.email, email)

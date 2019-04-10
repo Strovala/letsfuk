@@ -13,7 +13,7 @@ class BaseHandler(RequestHandler, SessionMixin):
         """Set the default response header to be JSON."""
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "session-id")
+        self.set_header("Access-Control-Allow-Headers", "session-id, content-type")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
     def options(self, *args, **kwargs):

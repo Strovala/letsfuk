@@ -23,7 +23,7 @@ class Auth(object):
         user = None
         if email is not None:
             user = User.query_by_email(db, email)
-        elif username is not None:
+        if user is None and username is not None:
             user = User.query_by_username(db, username)
         if user is None:
             raise WrongCredentials("Wrong username/email or password")
