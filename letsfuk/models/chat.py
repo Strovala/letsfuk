@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+
 import dateutil.parser
 import inject
 
@@ -38,17 +40,9 @@ class Chat(object):
             raise InvalidMessagePayload("Text too long, 600 chars is enough")
 
     @classmethod
-    def verify_sent_at(cls, sent_at):
-        if sent_at is None:
-            raise InvalidMessagePayload("Invalid sent_at attribute")
-        _ = cls.string_to_datetime(sent_at)
-
-    @classmethod
     def verify_add_message_payload(cls, payload):
-        sent_at = payload.get("sent_at")
         text = payload.get("text")
         user_id = payload.get("user_id")
-        cls.verify_sent_at(sent_at)
         cls.verify_text(text)
         cls.verify_add_message_receiver(user_id)
 
@@ -80,14 +74,6 @@ class Chat(object):
         cls.verify_get_messages_receiver(receiver_id)
 
     @classmethod
-    def string_to_datetime(cls, sent_at):
-        try:
-            sent_at = dateutil.parser.parse(sent_at)
-        except ValueError as _:
-            raise InvalidMessagePayload("Invalid sent_at attribute")
-        return sent_at
-
-    @classmethod
     def verify_get_messages_receiver(cls, receiver_id):
         db = inject.instance('db')
         user = User.query_by_user_id(db, receiver_id)
@@ -101,11 +87,10 @@ class Chat(object):
     def add(cls, payload, sender):
         db = inject.instance('db')
         user_id = payload.get("user_id")
-        sent_at_string = payload.get("sent_at")
         text = payload.get("text")
-        sent_at = cls.string_to_datetime(sent_at_string)
         station = Subscriber.get_station_for_user(db, sender.user_id)
         message_id = str(uuid.uuid4())
+        sent_at = datetime.utcnow()
         if user_id is not None:
             message = PrivateChat.add(
                 db, message_id, user_id, sender.user_id, text, sent_at

@@ -23,11 +23,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_to_station(self):
         session, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
-        now = datetime.utcnow()
-        now_string = str(now)
         body = {
-            "text": text,
-            "sent_at": now_string
+            "text": text
         }
         response = self.fetch(
             '/messages',
@@ -39,20 +36,15 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = now_string
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(station.station_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
-        self.assertEqual(sent_at, response_body.get('sent_at'))
 
     def test_add_message_to_user(self):
         session, user, receiver, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
-        now = datetime.utcnow()
-        now_string = str(now)
         body = {
             "text": text,
-            "sent_at": now_string,
             "user_id": receiver.user_id
         }
         response = self.fetch(
@@ -65,11 +57,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        sent_at = now_string
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(receiver.user_id, response_body.get('receiver_id'))
         self.assertEqual(user.user_id, response_body.get('sender_id'))
-        self.assertEqual(sent_at, response_body.get('sent_at'))
 
     def test_add_message_to_user_invalid_user(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
@@ -118,25 +108,6 @@ class TestMessages(BaseAsyncHTTPTestCase):
         body = {
             "text": text,
             "sent_at": now_string
-        }
-        response = self.fetch(
-            '/messages',
-            method="POST",
-            body=json.dumps(body).encode('utf-8'),
-            headers={
-                "session-id": session.session_id
-            }
-        )
-        self.assertEqual(response.code, 400)
-
-    def test_add_message_invalid_time(self):
-        session, _, _, _ = self.prepare_for_sending_message_to_user()
-        text = self.generator.text.generate()
-        now = datetime.utcnow()
-        now_string = str(now)
-        body = {
-            "text": text,
-            "sent_at": "qwerty" + now_string + "/"
         }
         response = self.fetch(
             '/messages',
