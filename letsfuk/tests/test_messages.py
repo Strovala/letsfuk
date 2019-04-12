@@ -473,3 +473,4 @@ class TestMessages(BaseAsyncHTTPTestCase):
             method="GET",
         )
         self.assertEqual(response.code, 401)
+# TODO: In get chat messages return reverse list then now

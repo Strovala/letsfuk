@@ -284,7 +284,7 @@ class PrivateChat(Base):
                     cls.sender_id == receiver_id,
                 ),
             )
-        ).order_by(asc(cls.sent_at)).offset(offset).limit(limit).all()
+        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return private_chat
 
     @classmethod
@@ -362,7 +362,7 @@ class StationChat(Base):
     def get(cls, db, receiver_id, offset, limit):
         messages = db.query(cls).filter(
             cls.receiver_id == receiver_id
-        ).order_by(asc(cls.sent_at)).offset(offset).limit(limit).all()
+        ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return messages
 
     def to_dict(self):
