@@ -64,12 +64,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_to_user_invalid_user(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
-        now = datetime.utcnow()
-        now_string = str(now)
         fake_user_id = self.generator.uuid.generate()
         body = {
             "text": text,
-            "sent_at": now_string,
             "user_id": fake_user_id
         }
         response = self.fetch(
@@ -85,11 +82,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
     def test_add_message_unauthorized(self):
         _, user, station = self.prepare_for_sending_message_to_station()
         text = self.generator.text.generate()
-        now = datetime.utcnow()
-        now_string = str(now)
         body = {
-            "text": text,
-            "sent_at": now_string
+            "text": text
         }
         response = self.fetch(
             '/messages',
@@ -103,11 +97,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         text = self.generator.text.generate()
         for _ in range(4):
             text += text
-        now = datetime.utcnow()
-        now_string = str(now)
         body = {
-            "text": text,
-            "sent_at": now_string
+            "text": text
         }
         response = self.fetch(
             '/messages',
@@ -444,4 +435,3 @@ class TestMessages(BaseAsyncHTTPTestCase):
             method="GET",
         )
         self.assertEqual(response.code, 401)
-# TODO: In get chat messages return reverse list then now
