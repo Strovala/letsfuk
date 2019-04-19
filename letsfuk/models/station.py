@@ -62,3 +62,9 @@ class Subscriber(object):
         db = inject.instance('db')
         subscriber = DbSubscriber.add(db, station.station_id, user.user_id)
         return subscriber
+
+    @classmethod
+    def get(cls, user):
+        db = inject.instance('db')
+        station = DbSubscriber.get_station_for_user(db, user.user_id)
+        return station

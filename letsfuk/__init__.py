@@ -31,6 +31,7 @@ def make_app():
         ('/auth/logout?', LogoutHandler),
         ('/users?', UsersHandler),
         ('/users/({})/?'.format(uuid_regex), UserHandler),
+        ('/users/({})/station/?'.format(uuid_regex), SubscribeHandler),
         ('/stations/?', StationsHandler),
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),

@@ -1,12 +1,12 @@
 import uuid
+import inject
 from datetime import datetime
 
-import dateutil.parser
-import inject
-
-from letsfuk.db.models import User, Subscriber, Station, PrivateChat, \
+from letsfuk.db.models import (
+    User, Subscriber, Station, PrivateChat,
     StationChat
-from letsfuk.models.user import UserNotFound
+)
+from letsfuk.models.user import User as UserModel
 
 
 class InvalidMessagePayload(Exception):
@@ -24,13 +24,7 @@ class ReceiverNotFound(Exception):
 class Chat(object):
     @classmethod
     def verify_add_message_receiver(cls, user_id):
-        db = inject.instance('db')
-        if user_id is not None:
-            user = User.query_by_user_id(db, user_id)
-            if user is None:
-                raise UserNotFound(
-                    "There is no user with user id: {}".format(user_id)
-                )
+        _ = UserModel.get(user_id)
 
     @classmethod
     def verify_text(cls, text):
@@ -76,7 +70,7 @@ class Chat(object):
     @classmethod
     def verify_get_messages_receiver(cls, receiver_id):
         db = inject.instance('db')
-        user = User.query_by_user_id(db, receiver_id)
+        user = UserModel.get(receiver_id)
         station = Station.query_by_station_id(db, receiver_id)
         if user is None and station is None:
             raise ReceiverNotFound(

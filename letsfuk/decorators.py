@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from letsfuk.config import Config
 from letsfuk.db.models import Session
-from letsfuk.db.models import User
+from letsfuk.models.user import User
 from letsfuk.errors import HttpException, InternalError, Unauthorized
 
 
@@ -70,8 +70,7 @@ def resolve_user(**kwargs):
     def dec(func):
         @wraps(func)
         def wrapper(self, *args, **kw):
-            db = inject.instance('db')
-            user = User.query_by_user_id(db, self.request.session.user_id)
+            user = User.get(self.request.session.user_id)
             self.request.user = user
             return func(self, *args, **kw)
         return wrapper

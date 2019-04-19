@@ -92,3 +92,19 @@ class TestStations(BaseAsyncHTTPTestCase):
         station = self.closest_station(stations, lat, lon)
         self.assertEqual(station.station_id, response_body.get('station_id'))
         self.assertEqual(user.user_id, response_body.get('user_id'))
+
+    def test_get_station_for_user(self):
+        station = self.add_station()
+        session, user = self.ensure_login()
+        _ = self.subscribe(station.station_id, user.user_id)
+        response = self.fetch(
+            '/users/{}/station'.format(user.user_id),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        response_station_id = response_body.get('station_id')
+        self.assertEqual(station.station_id, response_station_id)
