@@ -93,6 +93,24 @@ class TestStations(BaseAsyncHTTPTestCase):
         self.assertEqual(station.station_id, response_body.get('station_id'))
         self.assertEqual(user.user_id, response_body.get('user_id'))
 
+    def test_subscribe_invalid_lat_and_lon(self):
+        _ = self.ensure_stations(45)
+        session, user = self.ensure_login()
+        session_id = session.session_id
+        body = {
+            "lat": "",
+            "lon": "blant"
+        }
+        response = self.fetch(
+            '/stations/subscribe',
+            method="POST",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session_id
+            }
+        )
+        self.assertEqual(response.code, 400)
+
     def test_get_station_for_user(self):
         station = self.add_station()
         session, user = self.ensure_login()

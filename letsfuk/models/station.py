@@ -18,6 +18,8 @@ class Station(object):
     def validate_latitude(cls, lat):
         if lat is None:
             raise InvalidLatitude("Latitude need to be between -90 and 90")
+        if not isinstance(lat, int):
+            raise InvalidLatitude("Latitude need to be between -90 and 90")
         in_range = -90 <= lat <= 90
         if not in_range:
             raise InvalidLatitude("Latitude need to be between -90 and 90")
@@ -25,6 +27,8 @@ class Station(object):
     @classmethod
     def validate_longitude(cls, lon):
         if lon is None:
+            raise InvalidLatitude("Latitude need to be between -180 and 180")
+        if not isinstance(lon, int):
             raise InvalidLatitude("Latitude need to be between -180 and 180")
         in_range = -180 <= lon <= 180
         if not in_range:
