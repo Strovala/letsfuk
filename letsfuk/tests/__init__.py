@@ -122,6 +122,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
 
     def ensure_login(self, username=None, password="Test123!", email=None):
         db = inject.instance('db')
+        station = self.ensure_one_station()
         config = inject.instance(Config)
         registered_user = self.ensure_register(
             username=username, password=password, email=email
@@ -133,7 +134,8 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
         )
-        return session, registered_user
+        _ = self.subscribe(station.station_id, registered_user.user_id)
+        return session, registered_user, station
 
     def add_station(self, lat=None, lon=None):
         if lat is None:

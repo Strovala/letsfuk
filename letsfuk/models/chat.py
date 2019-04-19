@@ -6,7 +6,7 @@ from letsfuk.db.models import (
     User, Subscriber, Station, PrivateChat,
     StationChat
 )
-from letsfuk.models.user import User as UserModel
+from letsfuk.models.user import UserNotFound
 
 
 class InvalidMessagePayload(Exception):
@@ -24,7 +24,13 @@ class ReceiverNotFound(Exception):
 class Chat(object):
     @classmethod
     def verify_add_message_receiver(cls, user_id):
-        _ = UserModel.get(user_id)
+        db = inject.instance('db')
+        if user_id is not None:
+            user = User.query_by_user_id(db, user_id)
+            if user is None:
+                raise UserNotFound(
+                    "There is no user with user id: {}".format(user_id)
+                )
 
     @classmethod
     def verify_text(cls, text):
@@ -70,7 +76,7 @@ class Chat(object):
     @classmethod
     def verify_get_messages_receiver(cls, receiver_id):
         db = inject.instance('db')
-        user = UserModel.get(receiver_id)
+        user = User.query_by_user_id(db, receiver_id)
         station = Station.query_by_station_id(db, receiver_id)
         if user is None and station is None:
             raise ReceiverNotFound(
@@ -151,3 +157,4 @@ class ChatResponse(object):
             "messages": [message.to_dict() for message in self.messages]
         }
 # TODO: Subscribe first time per login
+# TODO: change tests self.ensure_login
