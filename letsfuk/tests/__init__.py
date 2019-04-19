@@ -258,6 +258,3 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             }
         ]
         return session, station_chat, private_chats
-
-# TODO: Add `get_current_station` endpoint
-# TODO: Subscribe to station within registration
