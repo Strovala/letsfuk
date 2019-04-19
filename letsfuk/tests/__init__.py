@@ -145,6 +145,14 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         station = Station.add(db, station_id, lat, lon)
         return station
 
+    def ensure_one_station(self):
+        db = inject.instance('db')
+        all_stations = db.query(Station).all()
+        if len(all_stations) > 0:
+            return all_stations[0]
+        station = self.add_station()
+        return station
+
     def ensure_stations(self, wide=45):
         """
         Add 9 stations across -wide +wide in x and y axis

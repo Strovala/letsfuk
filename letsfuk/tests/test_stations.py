@@ -70,7 +70,7 @@ class TestStations(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_subscribe(self):
-        stations = self.ensure_stations(45)
+        stations = self.ensure_stations()
         session, user = self.ensure_login()
         session_id = session.session_id
         lat = self.generator.latitude.generate()
@@ -94,7 +94,6 @@ class TestStations(BaseAsyncHTTPTestCase):
         self.assertEqual(user.user_id, response_body.get('user_id'))
 
     def test_subscribe_invalid_lat_and_lon(self):
-        _ = self.ensure_stations(45)
         session, user = self.ensure_login()
         session_id = session.session_id
         body = {

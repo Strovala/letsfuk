@@ -205,6 +205,16 @@ class Subscriber(Base):
     )
 
     @classmethod
+    def get(cls, db, station_id, user_id):
+        subscriber = db.query(cls).filter(
+            and_(
+                cls.station_id == station_id,
+                cls.user_id == user_id,
+            )
+        ).first()
+        return subscriber
+
+    @classmethod
     def get_users_for_station(cls, db, station_id):
         user_ids = db.query(cls).filter(cls.station_id == station_id).first()
         users = db.query(User).filter(User.user_id.in_(user_ids))
@@ -212,9 +222,11 @@ class Subscriber(Base):
 
     @classmethod
     def get_station_for_user(cls, db, user_id):
-        station = db.query(cls).filter(cls.user_id == user_id).first()
+        subscriber = db.query(cls).filter(cls.user_id == user_id).first()
+        if subscriber is None:
+            return None
         station = db.query(Station).filter(
-            Station.station_id == station.station_id
+            Station.station_id == subscriber.station_id
         ).first()
         return station
 
@@ -225,6 +237,12 @@ class Subscriber(Base):
             user_id=user_id
         )
         db.add(subscriber)
+        commit(db)
+        return subscriber
+
+    @classmethod
+    def delete(cls, db, subscriber):
+        db.delete(subscriber)
         commit(db)
         return subscriber
 

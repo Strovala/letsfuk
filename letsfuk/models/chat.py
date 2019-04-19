@@ -150,3 +150,4 @@ class ChatResponse(object):
             "receiver_id": self.receiver_id,
             "messages": [message.to_dict() for message in self.messages]
         }
+# TODO: Subscribe first time per login

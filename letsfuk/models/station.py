@@ -64,6 +64,12 @@ class Subscriber(object):
         lon = payload.get('lon')
         station = Station.get_closest(lat, lon)
         db = inject.instance('db')
+        old_station = cls.get(user)
+        if old_station is not None:
+            old_subscriber = DbSubscriber.get(
+                db, old_station.station_id, user.user_id
+            )
+            DbSubscriber.delete(db, old_subscriber)
         subscriber = DbSubscriber.add(db, station.station_id, user.user_id)
         return subscriber
 
