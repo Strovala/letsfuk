@@ -7,17 +7,14 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 
 class TestMessages(BaseAsyncHTTPTestCase):
     def prepare_for_sending_message_to_station(self):
-        session, user = self.ensure_login()
         station = self.add_station()
-        _ = self.subscribe(station.station_id, user.user_id)
+        session, user = self.ensure_login(station=station)
         return session, user, station
 
     def prepare_for_sending_message_to_user(self):
-        session, user = self.ensure_login()
-        receiver = self.ensure_register()
         station = self.add_station()
-        _ = self.subscribe(station.station_id, user.user_id)
-        _ = self.subscribe(station.station_id, receiver.user_id)
+        session, user = self.ensure_login(station=station)
+        receiver = self.ensure_register(station=station)
         return session, user, receiver, station
 
     def test_add_message_to_station(self):
@@ -38,7 +35,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(station.station_id, response_body.get('receiver_id'))
-        self.assertEqual(user.user_id, œresponse_body.get('sender_id'))
+        self.assertEqual(user.user_id, response_body.get('sender_id'))
 
     def test_add_message_to_user(self):
         session, user, receiver, _ = self.prepare_for_sending_message_to_user()
@@ -111,9 +108,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_get_station_chat(self):
-        session, user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
+        session, user = self.ensure_login(station=station)
         messages = self.make_station_chat(station)
         offset, limit = 5, 10
         response = self.fetch(
@@ -147,13 +143,10 @@ class TestMessages(BaseAsyncHTTPTestCase):
             )
 
     def test_get_private_chat(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
-        _, third_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
-        self.subscribe(station.station_id, third_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
+        _, third_user = self.ensure_login(station=station)
         messages = self.make_private_chat(user, another_user)
         _ = self.make_private_chat(user, third_user)
         offset, limit = 5, 10
@@ -188,11 +181,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
             )
 
     def test_chat_default_limit_offset(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         messages = self.make_private_chat(user, another_user)
         offset, limit = 0, 20
         response = self.fetch(
@@ -226,11 +217,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
             )
 
     def test_chat_limit_goes_out_of_bounds(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         messages = self.make_private_chat(user, another_user)
         offset, limit = 19, 10
         response = self.fetch(
@@ -264,11 +253,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
             )
 
     def test_chat_offset_goes_out_of_bounds(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         messages = self.make_private_chat(user, another_user)
         offset, limit = 30, 10
         response = self.fetch(
@@ -302,11 +289,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
             )
 
     def test_chat_unauthorized(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         _ = self.make_private_chat(user, another_user)
         offset, limit = 'random', 5
         response = self.fetch(
@@ -318,11 +303,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 401)
 
     def test_chat_invalid_offset(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         _ = self.make_private_chat(user, another_user)
         offset, limit = 'random', 5
         response = self.fetch(
@@ -337,11 +320,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_chat_invalid_limit(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         _ = self.make_private_chat(user, another_user)
         offset, limit = 5, 6.9
         response = self.fetch(
@@ -356,11 +337,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_chat_invalid_receiver(self):
-        session, user = self.ensure_login()
-        _, another_user = self.ensure_login()
         station = self.add_station()
-        self.subscribe(station.station_id, user.user_id)
-        self.subscribe(station.station_id, another_user.user_id)
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
         _ = self.make_private_chat(user, another_user)
         offset, limit = 5, 10
         random_receiver = self.generator.uuid.generate()

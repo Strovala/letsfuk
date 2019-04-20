@@ -10,7 +10,7 @@ from tornado.testing import AsyncHTTPTestCase
 
 from letsfuk import Config
 from letsfuk.models.user import User as UserModel
-from letsfuk.db import Base
+from letsfuk.db import Base, commit
 from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
@@ -109,7 +109,9 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
     def get_app(self):
         return letsfuk.make_app()
 
-    def ensure_register(self, username=None, password="Test123!", email=None):
+    def ensure_register(
+            self, username=None, password="Test123!", email=None, station=None
+    ):
         if username is None:
             username = self.generator.username.generate()
         if email is None:
@@ -118,11 +120,14 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         db = inject.instance('db')
         user_id = str(uuid.uuid4())
         user = User.add(db, user_id, username, email, bcrypted_password)
+        if station is not None:
+            _ = self.subscribe(station.station_id, user.user_id)
         return user
 
-    def ensure_login(self, username=None, password="Test123!", email=None):
+    def ensure_login(
+            self, username=None, password="Test123!", email=None, station=None
+    ):
         db = inject.instance('db')
-        station = self.ensure_one_station()
         config = inject.instance(Config)
         registered_user = self.ensure_register(
             username=username, password=password, email=email
@@ -134,8 +139,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
         )
+        if station is None:
+            station = self.add_station()
         _ = self.subscribe(station.station_id, registered_user.user_id)
-        return session, registered_user, station
+        return session, registered_user
 
     def add_station(self, lat=None, lon=None):
         if lat is None:
@@ -163,9 +170,20 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             * * *
         """
         # Drop database to ensure these are only stations
-        eng = inject.instance('db_engine')
-        Base.metadata.drop_all(bind=eng)
-        Base.metadata.create_all(engine)
+        db = inject.instance('db')
+        sbs = db.query(Subscriber).all()
+        ss = db.query(Station).all()
+        scs = db.query(StationChat).all()
+        for sc in scs:
+            db.delete(sc)
+            commit(db)
+        for sb in sbs:
+            db.delete(sb)
+            commit(db)
+        for s in ss:
+            db.delete(s)
+            commit(db)
+
         stations = [
             self.add_station(-wide, wide), self.add_station(0, wide),
             self.add_station(wide, wide),
@@ -229,7 +247,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
     def make_station_chat(self, station, users=None):
         if users is None:
             users = [self.ensure_register() for _ in range(5)]
-        [self.subscribe(station.station_id, user.user_id) for user in users]
+            _ = [
+                self.subscribe(station.station_id, user.user_id)
+                for user in users
+            ]
         messages = [
             self.add_group_message(user.user_id, station.station_id)
             for _ in range(4)
@@ -246,10 +267,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         return list(reversed(messages))
 
     def make_chats(self):
-        session, user = self.ensure_login()
-        another_user = self.ensure_register()
-        third_user = self.ensure_register()
         station = self.add_station()
+        session, user = self.ensure_login(station=station)
+        another_user = self.ensure_register(station=station)
+        third_user = self.ensure_register(station=station)
         station_chat = self.make_station_chat(
             station, [user, another_user, third_user]
         )

@@ -71,7 +71,7 @@ class TestStations(BaseAsyncHTTPTestCase):
 
     def test_subscribe(self):
         stations = self.ensure_stations()
-        session, user = self.ensure_login()
+        session, user = self.ensure_login(station=stations[0])
         session_id = session.session_id
         lat = self.generator.latitude.generate()
         lon = self.generator.longitude.generate()
@@ -112,8 +112,7 @@ class TestStations(BaseAsyncHTTPTestCase):
 
     def test_get_station_for_user(self):
         station = self.add_station()
-        session, user = self.ensure_login()
-        _ = self.subscribe(station.station_id, user.user_id)
+        session, user = self.ensure_login(station=station)
         response = self.fetch(
             '/users/{}/station'.format(user.user_id),
             method="GET",

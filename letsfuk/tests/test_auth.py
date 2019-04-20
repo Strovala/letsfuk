@@ -4,7 +4,7 @@ from letsfuk.tests import BaseAsyncHTTPTestCase
 
 class TestAuth(BaseAsyncHTTPTestCase):
     def test_login_with_username_provided_valid_email(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -32,10 +32,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_with_username_provided_wrong_email(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -63,10 +63,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_with_username(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -93,10 +93,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_with_email_provided_valid_username(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -124,10 +124,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_with_email_provided_wrong_username(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -155,10 +155,10 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_with_email(self):
-        station = self.ensure_one_station()
+        _ = self.add_station()
         password = "Test123!"
         registered_user = self.ensure_register(password=password)
         lat = self.generator.latitude.generate()
@@ -185,12 +185,14 @@ class TestAuth(BaseAsyncHTTPTestCase):
         self.assertEqual(registered_user.user_id, user_id)
         session_id = response_body.get('session_id')
         self.assertIsNotNone(session_id)
-        self.assertEqual(station.station_id, response_body.get('station_id'))
+        self.assertIsNotNone(response_body.get('station_id'))
 
     def test_login_already_loggedin(self):
         station = self.ensure_one_station()
         password = "Test123!"
-        session, loggedin_user = self.ensure_login(password=password)
+        session, loggedin_user = self.ensure_login(
+            password=password, station=station
+        )
         lat = self.generator.latitude.generate()
         lon = self.generator.longitude.generate()
         body = {
@@ -219,11 +221,11 @@ class TestAuth(BaseAsyncHTTPTestCase):
 
     def test_login_invalid_lat_and_lon(self):
         password = "Test123!"
-        session, loggedin_user = self.ensure_login(password=password)
+        registered_user = self.ensure_register(password=password)
         body = {
             "lat": "",
             "lon": "blant",
-            "username": loggedin_user.username,
+            "username": registered_user.username,
             "password": password
         }
         response = self.fetch(
