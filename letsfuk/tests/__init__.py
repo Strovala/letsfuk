@@ -134,7 +134,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         )
         session_id = str(uuid.uuid4())
         now = datetime.utcnow()
-        session_ttl = config.get('session_ttl', 30 * 60)
+        session_ttl = config.get('session_ttl', 946100000)
         expires_at = now + timedelta(seconds=session_ttl)
         session = Session.add(
             db, session_id, registered_user.user_id, expires_at
