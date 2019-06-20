@@ -216,7 +216,8 @@ class Subscriber(Base):
 
     @classmethod
     def get_users_for_station(cls, db, station_id):
-        user_ids = db.query(cls).filter(cls.station_id == station_id).first()
+        user_ids_tuple = db.query(cls.user_id).filter(cls.station_id == station_id).all()
+        user_ids = [user_id_tuple[0] for user_id_tuple in user_ids_tuple]
         users = db.query(User).filter(User.user_id.in_(user_ids))
         return users
 

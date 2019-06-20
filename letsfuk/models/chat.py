@@ -91,14 +91,38 @@ class Chat(object):
         station = Subscriber.get_station_for_user(db, sender.user_id)
         message_id = str(uuid.uuid4())
         sent_at = datetime.utcnow()
+        from letsfuk import MessageWebSocketHandler
         if user_id is not None:
             message = PrivateChat.add(
                 db, message_id, user_id, sender.user_id, text, sent_at
             )
+            web_socket = MessageWebSocketHandler.live_web_sockets.get(user_id)
+            if web_socket is not None:
+                web_socket.write_message({
+                    "event": "message",
+                    "data": {
+                        "is_station": False,
+                        "user_id": sender.user_id
+                    }
+                })
             return message
         message = StationChat.add(
             db, message_id, station.station_id, sender.user_id, text, sent_at
         )
+        station_users = Subscriber.get_users_for_station(
+            db, station.station_id
+        )
+        for station_user in station_users:
+            web_socket = MessageWebSocketHandler.live_web_sockets.get(
+                station_user.user_id
+            )
+            if web_socket is not None:
+                web_socket.write_message({
+                    "event": "message",
+                    "data": {
+                        "is_station": True
+                    }
+                })
         return message
 
     @classmethod

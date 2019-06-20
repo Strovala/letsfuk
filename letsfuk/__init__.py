@@ -14,6 +14,7 @@ from letsfuk.handlers.auth import LoginHandler, LogoutHandler
 from letsfuk.handlers.messages import MessagesHandler, ChatMessagesHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
+from letsfuk.handlers.websocket import MessageWebSocketHandler
 
 uuid_regex = (
     "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}"
@@ -36,6 +37,7 @@ def make_app():
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
+        ('/websocket/?', MessageWebSocketHandler),
     ],
         default_handler_class=DefaultHandler,
         session_factory=factory,
