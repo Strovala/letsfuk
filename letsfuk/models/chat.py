@@ -4,12 +4,13 @@ from datetime import datetime
 
 from letsfuk.db.models import (
     User, Subscriber, Station, PrivateChat,
-    StationChat
+    StationChat, Unread
 )
+from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
 
 
-class InvalidMessagePayload(Exception):
+class InvalidPayload(Exception):
     pass
 
 
@@ -21,9 +22,13 @@ class ReceiverNotFound(Exception):
     pass
 
 
+class InvalidCount(Exception):
+    pass
+
+
 class Chat(object):
     @classmethod
-    def verify_add_message_receiver(cls, user_id):
+    def verify_user(cls, user_id):
         db = inject.instance('db')
         if user_id is not None:
             user = User.query_by_user_id(db, user_id)
@@ -33,18 +38,46 @@ class Chat(object):
                 )
 
     @classmethod
+    def verify_station(cls, station_id):
+        db = inject.instance('db')
+        if station_id is not None:
+            station = Station.query_by_station_id(db, station_id)
+            if station is None:
+                raise StationNotFound(
+                    "There is no station with id: {}".format(station_id)
+                )
+
+    @classmethod
     def verify_text(cls, text):
         if text is None:
-            raise InvalidMessagePayload("Invalid text")
+            raise InvalidPayload("Invalid text")
         if len(text) > 600:
-            raise InvalidMessagePayload("Text too long, 600 chars is enough")
+            raise InvalidPayload("Text too long, 600 chars is enough")
 
     @classmethod
     def verify_add_message_payload(cls, payload):
         text = payload.get("text")
         user_id = payload.get("user_id")
         cls.verify_text(text)
-        cls.verify_add_message_receiver(user_id)
+        cls.verify_user(user_id)
+
+    @classmethod
+    def verify_int(cls, value):
+        if not isinstance(value, int):
+            raise InvalidCount("Count must be integer")
+
+    @classmethod
+    def verify_reset_unread(cls, payload):
+        station_id = payload.get('station_id')
+        sender_id = payload.get('sender_id')
+        count = payload.get('count')
+        if station_id is None and sender_id is None:
+            raise InvalidPayload(
+                "Both station_id and sender_id can't be empty"
+            )
+        cls.verify_station(station_id)
+        cls.verify_user(sender_id)
+        cls.verify_int(count)
 
     @classmethod
     def convert_param(cls, formatted_value):
@@ -96,15 +129,16 @@ class Chat(object):
             message = PrivateChat.add(
                 db, message_id, user_id, sender.user_id, text, sent_at
             )
-            web_socket = MessageWebSocketHandler.live_web_sockets.get(user_id)
-            if web_socket is not None:
-                web_socket.write_message({
-                    "event": "message",
-                    "data": {
-                        "is_station": False,
-                        "user_id": sender.user_id
-                    }
-                })
+            unread = Unread.add(db, user_id, sender_id=sender.user_id)
+            MessageWebSocketHandler.send_message(
+                user_id, event='message',
+                data={
+                    "is_station": False,
+                    "message": message.to_dict(),
+                    "sender_id": sender.user_id,
+                    "unread": unread.count
+                }
+            )
             return message
         message = StationChat.add(
             db, message_id, station.station_id, sender.user_id, text, sent_at
@@ -113,16 +147,20 @@ class Chat(object):
             db, station.station_id
         )
         for station_user in station_users:
-            web_socket = MessageWebSocketHandler.live_web_sockets.get(
-                station_user.user_id
+            if station_user.user_id == sender.user_id:
+                continue
+            unread = Unread.add(
+                db, station_user.user_id, station_id=station.station_id
             )
-            if web_socket is not None:
-                web_socket.write_message({
-                    "event": "message",
-                    "data": {
-                        "is_station": True
-                    }
-                })
+            MessageWebSocketHandler.send_message(
+                station_user.user_id, event='message',
+                data={
+                    "is_station": True,
+                    "message": message.to_dict(),
+                    "sender_id": station.station_id,
+                    "unread": unread.count
+                }
+            )
         return message
 
     @classmethod
@@ -138,12 +176,20 @@ class Chat(object):
             messages = StationChat.get(
                 db, station.station_id, offset, limit
             )
-            station_chat = ChatResponse(station.station_id, messages)
+            unread_count = cls.get_unread_in_station_for_user(
+                sender_id, station.station_id
+            )
+            station_chat = ChatResponse(
+                station.station_id, messages, unread_count
+            )
             return station_chat
         messages = PrivateChat.get(
             db, receiver_id, sender_id, offset, limit
         )
-        private_chat = ChatResponse(receiver_id, messages)
+        unread_count = cls.get_unread_in_private_for_user(
+            sender_id, receiver_id
+        )
+        private_chat = ChatResponse(receiver_id, messages, unread_count)
         return private_chat
 
     @classmethod
@@ -165,20 +211,55 @@ class Chat(object):
             messages = PrivateChat.get(
                 db, receiver_id, sender.user_id, 0, 20
             )
-            private_chat = ChatResponse(receiver_id, messages)
+            unread_count = cls.get_unread_in_private_for_user(
+                sender.user_id, receiver_id
+            )
+            private_chat = ChatResponse(receiver_id, messages, unread_count)
             private_chats.append(private_chat)
         return station_chat, private_chats
 
+    @classmethod
+    def get_unread_in_station_for_user(cls, user_id, station_id):
+        db = inject.instance('db')
+        unread = Unread.get(db, user_id, station_id=station_id)
+        unread_count = 0
+        if unread is not None:
+            unread_count = unread.count
+        return unread_count
+
+    @classmethod
+    def get_unread_in_private_for_user(cls, user_id, sender_id):
+        db = inject.instance('db')
+        unread = Unread.get(db, user_id, sender_id=sender_id)
+        unread_count = 0
+        if unread is not None:
+            unread_count = unread.count
+        return unread_count
+
+    @classmethod
+    def reset_unread(cls, payload, user):
+        station_id = payload.get('station_id')
+        sender_id = payload.get('sender_id')
+        count = payload.get('count')
+        db = inject.instance('db')
+        unread = Unread.reset(
+            db, user.user_id, station_id=station_id,
+            sender_id=sender_id, count=count
+        )
+        return unread
+
 
 class ChatResponse(object):
-    def __init__(self, receiver_id, messages):
+    def __init__(self, receiver_id, messages, unread=None):
         self.receiver_id = receiver_id
         self.messages = messages
+        self.unread = unread
 
     def to_dict(self):
         return {
             "receiver_id": self.receiver_id,
+            "unread": self.unread,
             "messages": [message.to_dict() for message in self.messages]
         }
-# TODO: Subscribe first time per login
+# TODO: Write test for unreads
 # TODO: change tests self.ensure_login

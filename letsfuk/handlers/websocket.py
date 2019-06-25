@@ -30,3 +30,12 @@ class MessageWebSocketHandler(WebSocketHandler):
                 _ = self.live_web_sockets.pop(user_id)
                 print("WebSocket closed for {}".format(user_id))
                 break
+
+    @classmethod
+    def send_message(cls, user_id, event='message', data=None):
+        web_socket = cls.live_web_sockets.get(user_id)
+        if web_socket is not None:
+            web_socket.write_message({
+                "event": event,
+                "data": data
+            })

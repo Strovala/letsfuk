@@ -216,7 +216,9 @@ class Subscriber(Base):
 
     @classmethod
     def get_users_for_station(cls, db, station_id):
-        user_ids_tuple = db.query(cls.user_id).filter(cls.station_id == station_id).all()
+        user_ids_tuple = db.query(cls.user_id).filter(
+            cls.station_id == station_id
+        ).all()
         user_ids = [user_id_tuple[0] for user_id_tuple in user_ids_tuple]
         users = db.query(User).filter(User.user_id.in_(user_ids))
         return users
@@ -397,5 +399,69 @@ class StationChat(Base):
         return (
             '<id: {} message_id: {} receiver_id: {} sender_id: {}>'.format(
                 self.id, self.message_id, self.receiver_id, self.sender_id
+            )
+        )
+
+
+class Unread(Base):
+    __tablename__ = 'unreads'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    receiver_id = Column(UUID, nullable=False)
+    station_id = Column(
+        UUID, ForeignKey('stations.station_id'), nullable=True
+    )
+    sender_id = Column(
+        UUID, ForeignKey('users.user_id'), nullable=True
+    )
+    count = Column(Integer, nullable=False, default=0)
+
+    @classmethod
+    def add(cls, db, receiver_id, station_id=None, sender_id=None):
+        if station_id is None and sender_id is None:
+            return None
+        unread = cls.get(db, receiver_id, station_id, sender_id)
+        if unread is None:
+            unread = Unread(
+                receiver_id=receiver_id,
+                station_id=station_id,
+                sender_id=sender_id,
+                count=0
+            )
+            db.add(unread)
+        unread.count += 1
+        commit(db)
+        return unread
+
+    @classmethod
+    def get(cls, db, receiver_id, station_id=None, sender_id=None):
+        unread = db.query(cls).filter(
+            cls.receiver_id == receiver_id,
+            cls.station_id == station_id,
+            cls.sender_id == sender_id
+        ).first()
+        return unread
+
+    @classmethod
+    def reset(cls, db, receiver_id, station_id=None, sender_id=None, count=0):
+        unread = cls.get(db, receiver_id, station_id, sender_id)
+        if unread is None:
+            return
+        unread.count = count
+        commit(db)
+        return unread
+
+    def to_dict(self):
+        return {
+            "receiver_id": self.receiver_id,
+            "station_id": self.station_id,
+            "sender_id": self.sender_id,
+            "count": self.count
+        }
+
+    def __repr__(self):
+        return (
+            '<id: {} receiver_id: {} station_id: {} sender_id: {}>'.format(
+                self.id, self.receiver_id, self.station_id, self.sender_id
             )
         )

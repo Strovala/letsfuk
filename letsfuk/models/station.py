@@ -13,6 +13,10 @@ class InvalidLongitude(Exception):
     pass
 
 
+class StationNotFound(Exception):
+    pass
+
+
 class Station(object):
     @classmethod
     def validate_latitude(cls, lat):

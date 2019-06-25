@@ -5,16 +5,17 @@ from letsfuk.decorators import (
 from letsfuk.errors import BadRequest, NotFound
 from letsfuk.handlers import BaseHandler
 from letsfuk.models.chat import (
-    Chat, InvalidMessagePayload,
+    Chat, InvalidPayload,
     InvalidLimitOffset,
-    ReceiverNotFound
-)
+    ReceiverNotFound,
+    InvalidCount)
+from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
 
 
 class MessagesHandler(BaseHandler):
     @endpoint_wrapper()
-    @map_exception(out_of=InvalidMessagePayload, make=BadRequest)
+    @map_exception(out_of=InvalidPayload, make=BadRequest)
     @map_exception(out_of=UserNotFound, make=NotFound)
     @check_session()
     @resolve_user()
@@ -27,7 +28,7 @@ class MessagesHandler(BaseHandler):
         return chat.to_dict(), 200
 
     @endpoint_wrapper()
-    @map_exception(out_of=InvalidMessagePayload, make=BadRequest)
+    @map_exception(out_of=InvalidPayload, make=BadRequest)
     @map_exception(out_of=UserNotFound, make=NotFound)
     @check_session()
     @resolve_user()
@@ -56,3 +57,18 @@ class ChatMessagesHandler(BaseHandler):
             receiver_id, self.request.user.user_id, self.request.arguments
         )
         return chat.to_dict(), 200
+
+
+class UnreadMessages(BaseHandler):
+    @endpoint_wrapper()
+    @map_exception(
+        out_of=(InvalidCount, UserNotFound, StationNotFound, InvalidPayload),
+        make=BadRequest
+    )
+    @check_session()
+    @resolve_user()
+    @resolve_body()
+    def put(self):
+        Chat.verify_reset_unread(self.request.body)
+        unread = Chat.reset_unread(self.request.body, self.request.user)
+        return unread.to_dict(), 200

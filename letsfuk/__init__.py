@@ -11,7 +11,9 @@ from letsfuk.config import Config
 from letsfuk.db import Base
 from letsfuk.handlers import DefaultHandler
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
-from letsfuk.handlers.messages import MessagesHandler, ChatMessagesHandler
+from letsfuk.handlers.messages import (
+    MessagesHandler, ChatMessagesHandler, UnreadMessages
+)
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
@@ -37,6 +39,7 @@ def make_app():
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
+        ('/messages/unread/reset/?', UnreadMessages),
         ('/websocket/?', MessageWebSocketHandler),
     ],
         default_handler_class=DefaultHandler,
