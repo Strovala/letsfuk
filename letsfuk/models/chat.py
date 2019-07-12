@@ -262,4 +262,3 @@ class ChatResponse(object):
             "messages": [message.to_dict() for message in self.messages]
         }
 # TODO: Write test for unreads
-# TODO: change tests self.ensure_login

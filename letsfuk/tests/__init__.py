@@ -14,6 +14,7 @@ from letsfuk.db import Base, commit
 from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
+from letsfuk.db.models import Unread
 from letsfuk.ioc import testing_configuration
 
 # Set up database for all tests
@@ -174,6 +175,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         sbs = db.query(Subscriber).all()
         ss = db.query(Station).all()
         scs = db.query(StationChat).all()
+        unreads = db.query(Unread).all()
+        for unread in unreads:
+            db.delete(unread)
+            commit(db)
         for sc in scs:
             db.delete(sc)
             commit(db)
@@ -289,3 +294,10 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             }
         ]
         return session, station_chat, private_chats
+
+    def ensure_unreads(self, receiver_id, station_id=None, sender_id=None):
+        db = inject.instance('db')
+        unread = Unread.add(
+            db, receiver_id, station_id=station_id, sender_id=sender_id
+        )
+        return unread

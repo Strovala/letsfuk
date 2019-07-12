@@ -39,7 +39,7 @@ def make_app():
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
-        ('/messages/unread/reset/?', UnreadMessages),
+        ('/messages/unreads/reset/?', UnreadMessages),
         ('/websocket/?', MessageWebSocketHandler),
     ],
         default_handler_class=DefaultHandler,

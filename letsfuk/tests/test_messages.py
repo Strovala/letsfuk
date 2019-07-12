@@ -414,3 +414,47 @@ class TestMessages(BaseAsyncHTTPTestCase):
             method="GET",
         )
         self.assertEqual(response.code, 401)
+
+    def test_reset_unread_messages_for_station(self):
+        station = self.add_station()
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
+        self.ensure_unreads(user.user_id, station_id=station.station_id)
+        body = {
+            "count": 0,
+            "receiver_id": user.user_id,
+            "station_id": station.station_id
+        }
+        response = self.fetch(
+            '/messages/unreads/reset',
+            method="PUT",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(response_body.get('count'), 0)
+
+    def test_reset_unread_messages_for_user(self):
+        station = self.add_station()
+        session, user = self.ensure_login(station=station)
+        _, another_user = self.ensure_login(station=station)
+        self.ensure_unreads(user.user_id, sender_id=another_user.user_id)
+        body = {
+            "count": 0,
+            "receiver_id": user.user_id,
+            "sender_id": another_user.user_id
+        }
+        response = self.fetch(
+            '/messages/unreads/reset',
+            method="PUT",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(response_body.get('count'), 0)
