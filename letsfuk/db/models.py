@@ -446,7 +446,7 @@ class Unread(Base):
     def reset(cls, db, receiver_id, station_id=None, sender_id=None, count=0):
         unread = cls.get(db, receiver_id, station_id, sender_id)
         if unread is None:
-            return
+            return Unread()
         unread.count = count
         commit(db)
         return unread
