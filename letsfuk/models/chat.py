@@ -147,8 +147,6 @@ class Chat(object):
             db, station.station_id
         )
         for station_user in station_users:
-            if station_user.user_id == sender.user_id:
-                continue
             unread = Unread.add(
                 db, station_user.user_id, station_id=station.station_id
             )
