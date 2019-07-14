@@ -257,16 +257,50 @@ class Chat(object):
         return unread
 
 
+class MessageResponse(object):
+    def __init__(self, message):
+        self.message = message
+
+        db = inject.instance('db')
+        self.sender = dict()
+        user = User.query_by_user_id(db, message.sender_id)
+        if user is not None:
+            self.sender = user.to_dict()
+
+    def to_dict(self):
+        result = self.message.to_dict()
+        result.pop('sender_id')
+        result.update(sender=self.sender)
+        return result
+
+
 class ChatResponse(object):
     def __init__(self, receiver_id, messages, unread=None):
-        self.receiver_id = receiver_id
-        self.messages = messages
         self.unread = unread
+
+        db = inject.instance('db')
+        self.receiver = dict()
+        user = User.query_by_user_id(db, receiver_id)
+        if user is not None:
+            self.receiver = user.to_dict()
+            self.receiver.update(id=user.user_id)
+            self.receiver.update(is_station=False)
+        station = Station.query_by_station_id(db, receiver_id)
+        if station is not None:
+            self.receiver.update(
+                id=station.station_id,
+                username="Station",
+                is_station=True
+            )
+
+        self.messages = [
+            MessageResponse(message)
+            for message in reversed(messages)
+        ]
 
     def to_dict(self):
         return {
-            "receiver_id": self.receiver_id,
+            "receiver": self.receiver,
             "unread": self.unread,
             "messages": [message.to_dict() for message in self.messages]
         }
-# TODO: Write test for unreads

@@ -123,7 +123,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        receiver_id = response_body.get('receiver_id')
+        receiver = response_body.get('receiver')
+        receiver_id = receiver.get('id')
         self.assertEqual(station.station_id, receiver_id)
         end = limit + offset
         if end > len(messages):
@@ -161,7 +162,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        receiver_id = response_body.get('receiver_id')
+        receiver = response_body.get('receiver')
+        receiver_id = receiver.get('id')
         self.assertEqual(another_user.user_id, receiver_id)
         end = limit + offset
         if end > len(messages):
@@ -197,7 +199,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        receiver_id = response_body.get('receiver_id')
+        receiver = response_body.get('receiver')
+        receiver_id = receiver.get('id')
         self.assertEqual(another_user.user_id, receiver_id)
         end = limit + offset
         if end > len(messages):
@@ -233,9 +236,11 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        receiver_id = response_body.get('receiver_id')
+        receiver = response_body.get('receiver')
+        receiver_id = receiver.get('id')
         self.assertEqual(another_user.user_id, receiver_id)
         end = limit + offset
+        messages = list(reversed(messages))
         if end > len(messages):
             end = len(messages)
         if offset >= len(messages):
@@ -269,7 +274,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        receiver_id = response_body.get('receiver_id')
+        receiver = response_body.get('receiver')
+        receiver_id = receiver.get('id')
         self.assertEqual(another_user.user_id, receiver_id)
         end = limit + offset
         if end > len(messages):
@@ -280,6 +286,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
             messages = messages[offset:end]
         response_messages = response_body.get('messages')
         self.assertEqual(len(response_messages), len(messages))
+        messages = list(reversed(messages))
         for i in range(len(response_messages)):
             response_message = response_messages[i]
             message = messages[i]
@@ -391,10 +398,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         for i in range(len(response_private_chats)):
             chat = private_chat[i]
             response_chat = response_private_chats[i]
-            self.assertEqual(
-                chat.get('receiver_id'),
-                response_chat.get('receiver_id')
-            )
+            receiver = response_chat.get('receiver')
+            receiver_id = receiver.get('id')
+            self.assertEqual(chat.get('receiver_id'), receiver_id)
             messages = chat.get('messages')
             response_messages = response_chat.get('messages')
             self.assertEqual(len(messages), len(response_messages))
