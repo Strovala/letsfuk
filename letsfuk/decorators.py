@@ -1,11 +1,10 @@
 import datetime
 import json
+import re
+import inject
 from functools import wraps
 from json import JSONDecodeError
-
-import inject
 from sqlalchemy.exc import IntegrityError
-
 from letsfuk.config import Config
 from letsfuk.db.models import Session
 from letsfuk.models.user import User
@@ -84,6 +83,10 @@ def check_session(**kwargs):
         def wrapper(self, *args, **kw):
             db = inject.instance('db')
             session_id = self.request.headers.get('session-id')
+            from letsfuk import uuid_regex
+            matching = re.match(uuid_regex, session_id)
+            if not matching:
+                raise Unauthorized("Unauthorized")
             existing_session = Session.query_by_session_id(db, session_id)
             if existing_session is not None:
                 # Check if session is expired

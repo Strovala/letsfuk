@@ -333,3 +333,13 @@ class TestAuth(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         text = response_body.get('text')
         self.assertAlmostEqual("Your session is expired", text)
+
+    def test_session_id_regex_fail(self):
+        response = self.fetch(
+            '/whoami',
+            method="GET",
+            headers={
+                "session-id": "blant"
+            }
+        )
+        self.assertEqual(response.code, 401)
