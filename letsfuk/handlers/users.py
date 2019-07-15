@@ -30,3 +30,12 @@ class UserHandler(BaseHandler):
     def get(self, user_id):
         user = User.get(user_id)
         return user.to_dict(), 200
+
+
+class WhoAmIHandler(BaseHandler):
+    @endpoint_wrapper()
+    @check_session()
+    @map_exception(out_of=UserNotFound, make=NotFound)
+    def get(self):
+        user = User.get_by_session(self.request.session)
+        return user.to_dict(), 200

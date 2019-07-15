@@ -4,7 +4,7 @@ import uuid
 import bcrypt
 import inject
 
-from letsfuk.db.models import User as DbUser
+from letsfuk.db.models import User as DbUser, Session
 
 
 class InvalidRegistrationPayload(Exception):
@@ -16,6 +16,10 @@ class UserAlreadyExists(Exception):
 
 
 class UserNotFound(Exception):
+    pass
+
+
+class InvalidSession(Exception):
     pass
 
 
@@ -94,5 +98,16 @@ class User(object):
         if user is None:
             raise UserNotFound(
                 "There is no user with user_id '{}'".format(user_id)
+            )
+        return user
+
+    @classmethod
+    def get_by_session(cls, session):
+        db = inject.instance('db')
+        user = DbUser.query_by_user_id(db, session.user_id)
+        if user is None:
+            raise UserNotFound(
+                "There is no user logged "
+                "in with session_id '{}'".format(session.session_id)
             )
         return user

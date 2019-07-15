@@ -99,6 +99,22 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(another_user.email, response_body.get('email'))
         self.assertEqual(another_user.user_id, response_body.get('user_id'))
 
+    def test_whoami(self):
+        session, user = self.ensure_login()
+        session_id = session.session_id
+        response = self.fetch(
+            '/whoami',
+            method="GET",
+            headers={
+                "session-id": session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(user.username, response_body.get('username'))
+        self.assertEqual(user.email, response_body.get('email'))
+        self.assertEqual(user.user_id, response_body.get('user_id'))
+
     def test_get_user_not_found(self):
         session, _ = self.ensure_login()
         session_id = session.session_id
