@@ -38,4 +38,7 @@ class WhoAmIHandler(BaseHandler):
     @map_exception(out_of=UserNotFound, make=NotFound)
     def get(self):
         user = User.get_by_session(self.request.session)
-        return user.to_dict(), 200
+        return {
+            "user": user.to_dict(),
+            "session_id": self.request.session.session_id
+         }, 200

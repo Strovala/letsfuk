@@ -111,9 +111,12 @@ class TestUsers(BaseAsyncHTTPTestCase):
         )
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
-        self.assertEqual(user.username, response_body.get('username'))
-        self.assertEqual(user.email, response_body.get('email'))
-        self.assertEqual(user.user_id, response_body.get('user_id'))
+        response_user = response_body.get('user')
+        response_session_id = response_body.get('session_id')
+        self.assertEqual(user.username, response_user.get('username'))
+        self.assertEqual(user.email, response_user.get('email'))
+        self.assertEqual(user.user_id, response_user.get('user_id'))
+        self.assertEqual(session_id, response_session_id)
 
     def test_get_user_not_found(self):
         session, _ = self.ensure_login()
