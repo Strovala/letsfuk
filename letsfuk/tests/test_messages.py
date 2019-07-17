@@ -224,6 +224,7 @@ class TestMessages(BaseAsyncHTTPTestCase):
         session, user = self.ensure_login(station=station)
         _, another_user = self.ensure_login(station=station)
         messages = self.make_private_chat(user, another_user)
+        messages = list(reversed(messages))
         offset, limit = 19, 10
         response = self.fetch(
             '/messages/{}?offset={}&limit={}'.format(

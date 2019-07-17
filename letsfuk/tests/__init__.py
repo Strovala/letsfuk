@@ -256,18 +256,20 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
                 self.subscribe(station.station_id, user.user_id)
                 for user in users
             ]
-        return [
+        messages = [
             self.add_group_message(user.user_id, station.station_id)
             for _ in range(4)
             for user in users
         ]
+        return list(reversed(messages))
 
     def make_private_chat(self, user, another_user):
-        return [
+        messages = [
             self.add_private_message(user_a.user_id, user_b.user_id)
             for _ in range(10)
             for user_a, user_b in [(user, another_user), (another_user, user)]
         ]
+        return list(reversed(messages))
 
     def make_chats(self):
         station = self.add_station()

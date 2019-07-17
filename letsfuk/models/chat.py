@@ -295,7 +295,7 @@ class ChatResponse(object):
 
         self.messages = [
             MessageResponse(message)
-            for message in reversed(messages)
+            for message in messages
         ]
 
     def to_dict(self):

@@ -82,7 +82,7 @@ def check_session(**kwargs):
         @map_exception(out_of=IntegrityError, make=InternalError)
         def wrapper(self, *args, **kw):
             db = inject.instance('db')
-            session_id = self.request.headers.get('session-id')
+            session_id = self.request.headers.get('session-id', '')
             from letsfuk import uuid_regex
             matching = re.match(uuid_regex, session_id)
             if not matching:
