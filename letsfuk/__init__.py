@@ -1,4 +1,6 @@
 import argparse
+import ssl
+
 import inject
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -60,7 +62,16 @@ def main():
     """Construct and serve the tornado application."""
     inject.configure(ioc.configuration)
     app = make_app()
-    http_server = HTTPServer(app)
+    cfg = inject.instance(Config)
+    ssl_ctx = None
+    development = cfg.get('development', False)
+    if not development:
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(cfg.get('crt'), cfg.get('key'))
+    http_server = HTTPServer(
+        app,
+        ssl_options=ssl_ctx
+    )
     http_server.listen(options.port)
     print('Listening on http://localhost:%i' % options.port)
     IOLoop.current().start()
