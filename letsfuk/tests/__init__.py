@@ -261,7 +261,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             for _ in range(4)
             for user in users
         ]
-        return list(reversed(messages))
+        return messages
 
     def make_private_chat(self, user, another_user):
         messages = [
@@ -269,7 +269,7 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             for _ in range(10)
             for user_a, user_b in [(user, another_user), (another_user, user)]
         ]
-        return list(reversed(messages))
+        return messages
 
     def make_chats(self):
         station = self.add_station()
