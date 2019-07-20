@@ -130,14 +130,15 @@ class Chat(object):
                 db, message_id, user_id, sender.user_id, text, sent_at
             )
             unread = Unread.add(db, user_id, sender_id=sender.user_id)
+            message_response = MessageResponse(message)
+            data = {
+                "is_station": True,
+                "unread": unread.count
+            }
+            data.update(message_response.to_dict())
             MessageWebSocketHandler.send_message(
                 user_id, event='message',
-                data={
-                    "is_station": False,
-                    "message": message.to_dict(),
-                    "sender_id": sender.user_id,
-                    "unread": unread.count
-                }
+                data=data
             )
             return message
         message = StationChat.add(
@@ -151,14 +152,15 @@ class Chat(object):
                 unread = Unread.add(
                     db, station_user.user_id, station_id=station.station_id
                 )
+                message_response = MessageResponse(message)
+                data = {
+                    "is_station": True,
+                    "unread": unread.count
+                }
+                data.update(message_response.to_dict())
                 MessageWebSocketHandler.send_message(
                     station_user.user_id, event='message',
-                    data={
-                        "is_station": True,
-                        "message": message.to_dict(),
-                        "sender_id": station.station_id,
-                        "unread": unread.count
-                    }
+                    data=data
                 )
         return message
 

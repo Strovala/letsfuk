@@ -8,7 +8,7 @@ from letsfuk.models.chat import (
     Chat, InvalidPayload,
     InvalidLimitOffset,
     ReceiverNotFound,
-    InvalidCount)
+    InvalidCount, MessageResponse)
 from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
 
@@ -22,10 +22,13 @@ class MessagesHandler(BaseHandler):
     @resolve_body()
     def post(self):
         Chat.verify_add_message_payload(self.request.body)
-        chat = Chat.add(
+        message = Chat.add(
             self.request.body, self.request.user
         )
-        return chat.to_dict(), 200
+        message_response = MessageResponse(message)
+        # TODO: Separate MessageResponse and ChatResponse into http
+        # TODO: layer like in the line above
+        return message_response.to_dict(), 200
 
     @endpoint_wrapper()
     @map_exception(out_of=InvalidPayload, make=BadRequest)

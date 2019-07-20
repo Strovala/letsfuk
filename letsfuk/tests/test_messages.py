@@ -35,7 +35,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(station.station_id, response_body.get('receiver_id'))
-        self.assertEqual(user.user_id, response_body.get('sender_id'))
+        sender_response = response_body.get('sender')
+        self.assertEqual(user.user_id, sender_response.get('user_id'))
 
     def test_add_message_to_user(self):
         session, user, receiver, _ = self.prepare_for_sending_message_to_user()
@@ -56,7 +57,8 @@ class TestMessages(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         self.assertEqual(text, response_body.get('text'))
         self.assertEqual(receiver.user_id, response_body.get('receiver_id'))
-        self.assertEqual(user.user_id, response_body.get('sender_id'))
+        sender_response = response_body.get('sender')
+        self.assertEqual(user.user_id, sender_response.get('user_id'))
 
     def test_add_message_to_user_invalid_user(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
