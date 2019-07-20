@@ -157,9 +157,11 @@ class Chat(object):
             db, station.station_id
         )
         for station_user in station_users:
-            unread = Unread.add(
-                db, station_user.user_id, station_id=station.station_id
-            )
+            unread = Unread()
+            if station_user.user_id != sender.user_id:
+                unread = Unread.add(
+                    db, station_user.user_id, station_id=station.station_id
+                )
             MessageWebSocketHandler.send_message(
                 station_user.user_id, event='message',
                 data={
