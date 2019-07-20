@@ -139,16 +139,6 @@ class Chat(object):
                     "unread": unread.count
                 }
             )
-            # Notify sender that he sent a message
-            MessageWebSocketHandler.send_message(
-                sender.user_id, event='message',
-                data={
-                    "is_station": False,
-                    "message": message.to_dict(),
-                    "sender_id": sender.user_id,
-                    "unread": 0
-                }
-            )
             return message
         message = StationChat.add(
             db, message_id, station.station_id, sender.user_id, text, sent_at
