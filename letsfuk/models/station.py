@@ -1,7 +1,9 @@
 import uuid
 
 import inject
-from letsfuk.db.models import Station as DbStation
+
+from letsfuk import Config
+from letsfuk.db.models import Station as DbStation, User as DbUser, StationChat
 from letsfuk.db.models import Subscriber as DbSubscriber
 
 
@@ -52,6 +54,8 @@ class Station(object):
         db = inject.instance('db')
         station_id = str(uuid.uuid4())
         station = DbStation.add(db, station_id, lat, lon)
+        # Ensure one subscription and one message
+        cls.ensure_message(station)
         return station
 
     @classmethod
@@ -59,6 +63,18 @@ class Station(object):
         db = inject.instance('db')
         station = DbStation.get_closest(db, lat, lon)
         return station
+
+    @classmethod
+    def ensure_message(cls, station):
+        config = inject.instance(Config)
+        db = inject.instance('db')
+        god_username = config.get('god_username')
+        user = DbUser.query_by_username(db, god_username)
+        DbSubscriber.add(db, station.station_id, user.user_id)
+        message_id = str(uuid.uuid4())
+        god_text = config.get('god_text')
+        god_sent_at = config.get('god_sent_at')
+        StationChat.add(db, message_id, station.station_id, user.user_id, god_text, god_sent_at)
 
 
 class Subscriber(object):

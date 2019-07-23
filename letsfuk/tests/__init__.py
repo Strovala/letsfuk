@@ -301,3 +301,13 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             db, receiver_id, station_id=station_id, sender_id=sender_id
         )
         return unread
+
+    def assertUserWithUsername(self, username):
+        db = inject.instance('db')
+        user = User.query_by_username(db, username)
+        self.assertIsNotNone(user)
+
+    def assertMessageInStation(self, station_id):
+        db = inject.instance('db')
+        messages = StationChat.get(db, station_id, 0, 20)
+        self.assertEqual(len(messages), 1)

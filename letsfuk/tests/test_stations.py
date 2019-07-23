@@ -8,6 +8,7 @@ class TestStations(BaseAsyncHTTPTestCase):
         return value
 
     def test_add_station(self):
+        self.ensure_register(username='strovala')
         session, _ = self.ensure_login()
         session_id = session.session_id
         lat = self.generator.latitude.generate()
@@ -30,6 +31,9 @@ class TestStations(BaseAsyncHTTPTestCase):
         longitude = response_body.get('longitude')
         self.assertEqual(self._round_value(lat), latitude)
         self.assertEqual(self._round_value(lon), longitude)
+        self.assertUserWithUsername('strovala')
+        station_id = response_body.get('station_id')
+        self.assertMessageInStation(station_id)
 
     def test_add_station_invalid_lat(self):
         session, _ = self.ensure_login()
