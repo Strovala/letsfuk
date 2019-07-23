@@ -70,7 +70,6 @@ class Station(object):
         db = inject.instance('db')
         god_username = config.get('god_username')
         user = DbUser.query_by_username(db, god_username)
-        DbSubscriber.add(db, station.station_id, user.user_id)
         message_id = str(uuid.uuid4())
         god_text = config.get('god_text')
         god_sent_at = config.get('god_sent_at')
