@@ -39,5 +39,5 @@ class SubscribeHandler(BaseHandler):
     @resolve_user()
     def get(self, user_id):
         user = User.get(user_id)
-        station = Subscriber.get(user)
+        station = Station.get_for_user(user)
         return station.to_dict(), 200

@@ -65,6 +65,13 @@ class Station(object):
         return station
 
     @classmethod
+    def get_for_user(cls, user):
+        db = inject.instance('db')
+        station = DbSubscriber.get_station_for_user(db, user.user_id)
+        station = DbStation.query_by_station_id(db, station.station_id)
+        return station
+
+    @classmethod
     def ensure_message(cls, station):
         config = inject.instance(Config)
         db = inject.instance('db')

@@ -67,8 +67,8 @@ class Station(Base):
     def to_dict(self):
         return {
             "station_id": self.station_id,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
+            "lat": self.latitude,
+            "lon": self.longitude,
         }
 
     def __repr__(self):
