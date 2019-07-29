@@ -132,7 +132,7 @@ class Chat(object):
             unread = Unread.add(db, user_id, sender_id=sender.user_id)
             message_response = MessageResponse(message)
             data = {
-                "is_station": True,
+                "is_station": False,
                 "unread": unread.count
             }
             data.update(message_response.to_dict())
