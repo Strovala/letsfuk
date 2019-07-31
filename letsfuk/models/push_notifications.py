@@ -1,6 +1,6 @@
 import inject
 import json
-from pywebpush import webpush
+from pywebpush import webpush, WebPushException
 
 from letsfuk import Config
 from letsfuk.db.models import PushNotification as DbPushNotification
@@ -66,12 +66,18 @@ class PushNotifications(object):
         config = inject.instance(Config)
         vapid_private_key = config.get('vapid_private_key')
         email = config.get('vapid_mail')
-        webpush(
-            subscription_info,
-            json_data,
-            vapid_private_key=vapid_private_key,
-            vapid_claims={"sub": 'mailto:{}'.format(email)}
-        )
+        try:
+            webpush(
+                subscription_info,
+                json_data,
+                vapid_private_key=vapid_private_key,
+                vapid_claims={"sub": 'mailto:{}'.format(email)}
+            )
+        except WebPushException as e:
+            if e.response.status_code == 410:
+                # Delete old subscription
+                db = inject.instance('db')
+                DbPushNotification.unsubscribe(db, device_browser)
 
     @classmethod
     def send_to_user(cls, user_id, data):
