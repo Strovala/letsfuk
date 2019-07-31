@@ -62,7 +62,7 @@ class ChatMessagesHandler(BaseHandler):
         return chat.to_dict(), 200
 
 
-class UnreadMessages(BaseHandler):
+class   UnreadMessagesHandler(BaseHandler):
     @endpoint_wrapper()
     @map_exception(
         out_of=(InvalidCount, UserNotFound, StationNotFound, InvalidPayload),

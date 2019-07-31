@@ -34,7 +34,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
         self.assertEqual(text, response_body.get('text'))
-        self.assertEqual(station.station_id, response_body.get('receiver_id'))
+        receiver_response = response_body.get('receiver')
+        receiver_id = receiver_response.get('id')
+        self.assertEqual(station.station_id, receiver_id)
         sender_response = response_body.get('sender')
         self.assertEqual(user.user_id, sender_response.get('user_id'))
 
@@ -56,7 +58,9 @@ class TestMessages(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_body = json.loads(response.body.decode())
         self.assertEqual(text, response_body.get('text'))
-        self.assertEqual(receiver.user_id, response_body.get('receiver_id'))
+        receiver_response = response_body.get('receiver')
+        receiver_id = receiver_response.get('id')
+        self.assertEqual(receiver.user_id, receiver_id)
         sender_response = response_body.get('sender')
         self.assertEqual(user.user_id, sender_response.get('user_id'))
 

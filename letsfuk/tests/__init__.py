@@ -11,7 +11,8 @@ from tornado.testing import AsyncHTTPTestCase
 from letsfuk import Config
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base, commit
-from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat
+from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat, \
+    PushNotification
 from letsfuk.db.models import User
 from letsfuk.db.models import Session
 from letsfuk.db.models import Unread
@@ -311,3 +312,14 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         db = inject.instance('db')
         messages = StationChat.get(db, station_id, 0, 20)
         self.assertEqual(len(messages), 1)
+
+    def ensure_push_sub(self):
+        session, user = self.ensure_login()
+        endpoint = self.generator.text.generate()
+        auth = self.generator.text.generate()
+        p256dh = self.generator.text.generate()
+        db = inject.instance('db')
+        subscriber = PushNotification.subscribe(
+            db, user.user_id, endpoint, auth, p256dh
+        )
+        return subscriber, session, user

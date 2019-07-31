@@ -465,3 +465,76 @@ class Unread(Base):
                 self.id, self.receiver_id, self.station_id, self.sender_id
             )
         )
+
+
+class PushNotification(Base):
+    __tablename__ = 'push_notifications'
+    __table_args__ = (
+        UniqueConstraint('endpoint', 'auth', 'p256dh', name='device_browser'),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(
+        UUID, ForeignKey('users.user_id'), nullable=False
+    )
+    endpoint = Column(
+        String, nullable=False
+    )
+    auth = Column(String, nullable=False)
+    p256dh = Column(String, nullable=False)
+
+    @classmethod
+    def subscribe(cls, db, user_id, endpoint, auth, p256dh):
+        subscriber = cls.query_by_device_browser(db, endpoint, auth, p256dh)
+        if subscriber is None:
+            subscriber = PushNotification(
+                user_id=user_id, endpoint=endpoint, auth=auth, p256dh=p256dh
+            )
+            db.add(subscriber)
+        else:
+            # Update new user to use this device_browser
+            subscriber.user_id = user_id
+        commit(db)
+        return subscriber
+
+    @classmethod
+    def unsubscribe(cls, db, subscriber):
+        db.delete(subscriber)
+        commit(db)
+        return subscriber
+
+    @classmethod
+    def get(cls, db, user_id, endpoint, auth, p256dh):
+        subscriber = db.query(cls).filter(
+            cls.user_id == user_id,
+            cls.endpoint == endpoint,
+            cls.auth == auth,
+            cls.p256dh == p256dh
+        ).first()
+        return subscriber
+
+    @classmethod
+    def query_by_device_browser(cls, db, endpoint, auth, p256dh):
+        subscriber = db.query(cls).filter(
+            cls.endpoint == endpoint,
+            cls.auth == auth,
+            cls.p256dh == p256dh
+        ).first()
+        return subscriber
+
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "endpoint": self.endpoint,
+            "keys": {
+                "auth": self.auth,
+                "p256dh": self.p256dh
+            }
+        }
+
+    def __repr__(self):
+        return (
+            '<id: {} user_id: {} endpoint: {} auth: {} p256dh: {}>'.format(
+                self.id, self.user_id, self.endpoint, self.auth, self.p256dh
+            )
+        )
