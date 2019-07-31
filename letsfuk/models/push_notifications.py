@@ -70,7 +70,7 @@ class PushNotifications(object):
             subscription_info,
             json_data,
             vapid_private_key=vapid_private_key,
-            vapid_claims={"sub": email}
+            vapid_claims={"sub": 'mailto:{}'.format(email)}
         )
 
     @classmethod
