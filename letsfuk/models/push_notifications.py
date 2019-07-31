@@ -65,7 +65,7 @@ class PushNotifications(object):
         json_data = json.dumps(data)
         config = inject.instance(Config)
         vapid_private_key = config.get('vapid_private_key')
-        email = config.get('vapid_private_key')
+        email = config.get('vapid_mail')
         webpush(
             subscription_info,
             json_data,
