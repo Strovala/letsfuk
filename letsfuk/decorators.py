@@ -30,6 +30,9 @@ def endpoint_wrapper(**kwargs):
                     "text": e.text
                 }
                 status_code = e.status_code
+            if status_code == 204:
+                self.set_status(204)
+                return
             self.send_response(response, status_code)
         return wrapper
     return dec
