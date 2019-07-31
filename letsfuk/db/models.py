@@ -522,6 +522,13 @@ class PushNotification(Base):
         ).first()
         return subscriber
 
+    @classmethod
+    def query_by_user_id(cls, db, user_id):
+        device_browsers = db.query(cls).filter(
+            cls.user_id == user_id
+        ).all()
+        return device_browsers
+
     def to_dict(self):
         return {
             "user_id": self.user_id,

@@ -1,5 +1,8 @@
 import inject
+import json
+from pywebpush import webpush
 
+from letsfuk import Config
 from letsfuk.db.models import PushNotification as DbPushNotification
 
 
@@ -54,3 +57,25 @@ class PushNotifications(object):
                 "There is no subscription for user with user_id: {}".format(user.user_id)
             )
         _ = DbPushNotification.unsubscribe(db, subscriber)
+
+    @classmethod
+    def send(cls, device_browser, data):
+        subscription_info = device_browser.to_dict()
+        subscription_info.pop('user_id')
+        json_data = json.dumps(data)
+        config = inject.instance(Config)
+        vapid_private_key = config.get('vapid_private_key')
+        email = config.get('vapid_private_key')
+        webpush(
+            subscription_info,
+            json_data,
+            vapid_private_key=vapid_private_key,
+            vapid_claims={"sub": email}
+        )
+
+    @classmethod
+    def send_to_user(cls, user_id, data):
+        db = inject.instance('db')
+        device_browsers = DbPushNotification.query_by_user_id(db, user_id)
+        for device_browser in device_browsers:
+            cls.send(device_browser, data)

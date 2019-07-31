@@ -6,6 +6,7 @@ from letsfuk.db.models import (
     User, Subscriber, Station, PrivateChat,
     StationChat, Unread
 )
+from letsfuk.models.push_notifications import PushNotifications
 from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
 
@@ -140,6 +141,7 @@ class Chat(object):
                 user_id, event='message',
                 data=data
             )
+            PushNotifications.send_to_user(user_id, data)
             return message
         message = StationChat.add(
             db, message_id, station.station_id, sender.user_id, text, sent_at
