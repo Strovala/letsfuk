@@ -263,19 +263,6 @@ class MessageResponse(object):
         self.message = message
 
         db = inject.instance('db')
-        self.receiver = dict()
-        user = User.query_by_user_id(db, message.receiver_id)
-        if user is not None:
-            self.receiver = user.to_dict()
-            self.receiver.update(id=user.user_id)
-            self.receiver.update(is_station=False)
-        station = Station.query_by_station_id(db, message.receiver_id)
-        if station is not None:
-            self.receiver.update(
-                id=station.station_id,
-                username="Station",
-                is_station=True
-            )
         self.sender = dict()
         user = User.query_by_user_id(db, message.sender_id)
         if user is not None:
@@ -285,8 +272,6 @@ class MessageResponse(object):
         result = self.message.to_dict()
         result.pop('sender_id')
         result.update(sender=self.sender)
-        result.pop('receiver_id')
-        result.update(receiver=self.receiver)
         return result
 
 
@@ -311,7 +296,7 @@ class ChatResponse(object):
 
         self.messages = [
             MessageResponse(message)
-            for message in list(reversed(messages))
+            for message in reversed(messages)
         ]
 
     def to_dict(self):
