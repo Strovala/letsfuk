@@ -83,18 +83,16 @@ class Chat(object):
 
     @classmethod
     def convert_param(cls, formatted_value):
-        value = int(formatted_value[0])
+        value = int(formatted_value)
         return value
 
     @classmethod
     def verify_param(cls, value):
-        if value is not None:
-            if not isinstance(value, list):
-                raise InvalidLimitOffset("Invalid parameter")
-            try:
-                _ = int(value[0])
-            except ValueError as _:
-                raise InvalidLimitOffset("Invalid parameter")
+        try:
+            if value is not None:
+                _ = int(value)
+        except ValueError as _:
+            raise InvalidLimitOffset("Invalid parameter")
 
     @classmethod
     def verify_params(cls, params):
@@ -105,12 +103,8 @@ class Chat(object):
 
     @classmethod
     def get_params(cls, params, default_limit):
-        config = inject.instance(Config)
-        offset_formatted = params.get("offset", [b'0'])
-        encoding = config.get('query_encoding', 'utf-8')
-        limit_formatted = params.get(
-            "limit", [bytes('{}'.format(default_limit), encoding)]
-        )
+        offset_formatted = params.get("offset", 0)
+        limit_formatted = params.get("limit", default_limit)
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         return offset, limit

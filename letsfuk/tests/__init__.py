@@ -90,6 +90,13 @@ class TextGenerator(Generator):
         return text
 
 
+class UrlGenerator(Generator):
+    def _generate(self):
+        left_domain = ''.join([choice(self.letters) for _ in range(12)])
+        right_domain = ''.join([choice(self.letters) for _ in range(12)])
+        return 'https://{}.{}.com'.format(left_domain, right_domain)
+
+
 class GeneratorPool(object):
     def __init__(self):
         self.username = UsernameGenerator()
@@ -98,6 +105,7 @@ class GeneratorPool(object):
         self.longitude = LongitudeGenerator()
         self.uuid = UuidGenerator()
         self.text = TextGenerator()
+        self.url = UrlGenerator()
 
 
 generator_pool = GeneratorPool()
@@ -313,11 +321,11 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         messages = StationChat.get(db, station_id, 0, 20)
         self.assertEqual(len(messages), 1)
 
-    def ensure_push_sub(self):
+    def ensure_push_sub(self, endpoint=None, auth=None, p256dh=None):
         session, user = self.ensure_login()
-        endpoint = self.generator.text.generate()
-        auth = self.generator.text.generate()
-        p256dh = self.generator.text.generate()
+        endpoint = endpoint or self.generator.url.generate()
+        auth = auth or self.generator.username.generate()
+        p256dh = p256dh or self.generator.username.generate()
         db = inject.instance('db')
         subscriber = PushNotification.subscribe(
             db, user.user_id, endpoint, auth, p256dh

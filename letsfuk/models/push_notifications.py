@@ -10,11 +10,27 @@ class InvalidPayload(Exception):
     pass
 
 
+class InvalidParams(Exception):
+    pass
+
+
 class SubscriberNotFound(Exception):
     pass
 
 
 class PushNotifications(object):
+    @classmethod
+    def verify_params(cls, params):
+        endpoint = params.get('endpoint')
+        if endpoint is None:
+            raise InvalidParams("Endpoint not provided!")
+        auth = params.get('auth')
+        if auth is None:
+            raise InvalidParams("Auth key not provided!")
+        p256dh = params.get('p256dh')
+        if p256dh is None:
+            raise InvalidParams("p256dh key not provided!")
+
     @classmethod
     def verify_payload(cls, payload):
         endpoint = payload.get('endpoint')
@@ -85,3 +101,21 @@ class PushNotifications(object):
         device_browsers = DbPushNotification.query_by_user_id(db, user_id)
         for device_browser in device_browsers:
             cls.send(device_browser, data)
+
+    @classmethod
+    def check(cls, user, params):
+        endpoint = params.get('endpoint')
+        auth = params.get('auth')
+        p256dh = params.get('p256dh')
+        db = inject.instance('db')
+        subscriber = DbPushNotification.get(
+            db, user.user_id, endpoint, auth, p256dh
+        )
+        if subscriber is None:
+            raise SubscriberNotFound(
+                "There is no subscription for user"
+                " with user_id: {} endpoint: {} auth: {} p256dh: {}".format(
+                    user.user_id, endpoint, auth, p256dh
+                )
+            )
+        return subscriber

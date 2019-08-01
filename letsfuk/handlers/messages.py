@@ -33,9 +33,9 @@ class MessagesHandler(BaseHandler):
     @check_session()
     @resolve_user()
     def get(self):
-        Chat.verify_params(self.request.arguments)
+        Chat.verify_params(self.request.params)
         station_chat, private_chats = Chat.get_multiple(
-            self.request.user, self.request.arguments
+            self.request.user, self.request.params
         )
         return {
             "station_chat": station_chat.to_dict(),
@@ -51,10 +51,10 @@ class ChatMessagesHandler(BaseHandler):
     @resolve_user()
     def get(self, receiver_id):
         Chat.verify_get_messages_payload(
-            receiver_id, self.request.arguments
+            receiver_id, self.request.params
         )
         chat = Chat.get(
-            receiver_id, self.request.user.user_id, self.request.arguments
+            receiver_id, self.request.user.user_id, self.request.params
         )
         return chat.to_dict(), 200
 

@@ -91,3 +91,30 @@ class TestPushNotifications(BaseAsyncHTTPTestCase):
             }
         )
         self.assertEqual(response.code, 204)
+
+    def test_check(self):
+        subscriber, session, user = self.ensure_push_sub()
+        endpoint = subscriber.endpoint
+        auth = subscriber.auth
+        p256dh = subscriber.p256dh
+        response = self.fetch(
+            '/push-notifications/check?endpoint={}&auth={}&p256dh={}'.format(
+                endpoint, auth, p256dh
+            ),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        response_user_id = response_body.get('user_id')
+        response_endpoint = response_body.get('endpoint')
+        keys = response_body.get('keys')
+        self.assertIsNotNone(keys)
+        response_auth = keys.get('auth')
+        response_p256dh = keys.get('p256dh')
+        self.assertEqual(user.user_id, response_user_id)
+        self.assertEqual(endpoint, response_endpoint)
+        self.assertEqual(auth, response_auth)
+        self.assertEqual(p256dh, response_p256dh)

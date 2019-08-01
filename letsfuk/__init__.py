@@ -17,8 +17,8 @@ from letsfuk.handlers.messages import (
     MessagesHandler, ChatMessagesHandler, UnreadMessagesHandler
 )
 from letsfuk.handlers.push_notifications import (
-    PushSubscribeHandler, PushUnsubscribeHandler
-)
+    PushSubscribeHandler, PushUnsubscribeHandler,
+    PushCheckHandler)
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler, WhoAmIHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
@@ -46,6 +46,7 @@ def make_app():
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
         ('/messages/unreads/reset/?', UnreadMessagesHandler),
+        ('/push-notifications/check/?', PushCheckHandler),
         ('/push-notifications/subscribe/?', PushSubscribeHandler),
         (
             '/push-notifications/unsubscribe/?',

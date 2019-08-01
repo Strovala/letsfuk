@@ -23,6 +23,13 @@ def endpoint_wrapper(**kwargs):
         @wraps(func)
         def wrapper(self, *args, **kw):
             try:
+                self.request.params = dict()
+                for param in self.request.arguments:
+                    config = inject.instance(Config)
+                    encoding = config.get('param_encoding', 'utf-8')
+                    bytes_param = self.request.arguments[param][0]
+                    str_param = bytes_param.decode(encoding)
+                    self.request.params[param] = str_param
                 response, status_code = func(self, *args, **kw)
             except HttpException as e:
                 response = {

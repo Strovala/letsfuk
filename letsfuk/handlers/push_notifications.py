@@ -7,8 +7,8 @@ from letsfuk.errors import BadRequest, NotFound
 from letsfuk.handlers import BaseHandler
 from letsfuk.models.push_notifications import (
     PushNotifications,
-    InvalidPayload, SubscriberNotFound
-)
+    InvalidPayload, SubscriberNotFound,
+    InvalidParams)
 
 
 class PushSubscribeHandler(BaseHandler):
@@ -36,3 +36,17 @@ class PushUnsubscribeHandler(BaseHandler):
             self.request.user, self.request.body
         )
         return {}, 204
+
+
+class PushCheckHandler(BaseHandler):
+    @endpoint_wrapper()
+    @map_exception(out_of=InvalidParams, make=BadRequest)
+    @map_exception(out_of=SubscriberNotFound, make=NotFound)
+    @check_session()
+    @resolve_user()
+    def get(self):
+        PushNotifications.verify_params(self.request.params)
+        subscriber = PushNotifications.check(
+            self.request.user, self.request.params
+        )
+        return subscriber.to_dict(), 200
