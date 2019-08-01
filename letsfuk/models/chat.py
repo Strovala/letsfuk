@@ -2,6 +2,7 @@ import uuid
 import inject
 from datetime import datetime
 
+from letsfuk import Config
 from letsfuk.db.models import (
     User, Subscriber, Station, PrivateChat,
     StationChat, Unread
@@ -169,8 +170,13 @@ class Chat(object):
     @classmethod
     def get(cls, receiver_id, sender_id, params):
         # In this format query params are packed
+        config = inject.instance(Config)
         offset_formatted = params.get("offset", [b'0'])
-        limit_formatted = params.get("limit", [b'20'])
+        default_limit = config.get('default_chat_limit', 20)
+        encoding = config.get('query_encoding', 'utf-8')
+        limit_formatted = params.get(
+            "limit", [bytes('{}'.format(default_limit), encoding)]
+        )
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         db = inject.instance('db')
@@ -197,8 +203,13 @@ class Chat(object):
 
     @classmethod
     def get_multiple(cls, sender, params):
+        config = inject.instance(Config)
         offset_formatted = params.get("offset", [b'0'])
-        limit_formatted = params.get("limit", [b'10'])
+        default_limit = config.get('default_chat_list_limit', 10)
+        encoding = config.get('query_encoding', 'utf-8')
+        limit_formatted = params.get(
+            "limit", [bytes('{}'.format(default_limit), encoding)]
+        )
         offset = cls.convert_param(offset_formatted)
         limit = cls.convert_param(limit_formatted)
         db = inject.instance('db')
