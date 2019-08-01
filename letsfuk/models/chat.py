@@ -104,6 +104,18 @@ class Chat(object):
         cls.verify_param(limit)
 
     @classmethod
+    def get_params(cls, params, default_limit):
+        config = inject.instance(Config)
+        offset_formatted = params.get("offset", [b'0'])
+        encoding = config.get('query_encoding', 'utf-8')
+        limit_formatted = params.get(
+            "limit", [bytes('{}'.format(default_limit), encoding)]
+        )
+        offset = cls.convert_param(offset_formatted)
+        limit = cls.convert_param(limit_formatted)
+        return offset, limit
+
+    @classmethod
     def verify_get_messages_payload(cls, receiver_id, params):
         cls.verify_params(params)
         cls.verify_get_messages_receiver(receiver_id)
@@ -143,7 +155,7 @@ class Chat(object):
                 data=data
             )
             PushNotifications.send_to_user(user_id, data)
-            return message
+            return MessageResponse(message)
         message = StationChat.add(
             db, message_id, station.station_id, sender.user_id, text, sent_at
         )
@@ -165,20 +177,14 @@ class Chat(object):
                     station_user.user_id, event='message',
                     data=data
                 )
-        return message
+        return MessageResponse(message)
 
     @classmethod
     def get(cls, receiver_id, sender_id, params):
         # In this format query params are packed
         config = inject.instance(Config)
-        offset_formatted = params.get("offset", [b'0'])
-        default_limit = config.get('default_chat_limit', 20)
-        encoding = config.get('query_encoding', 'utf-8')
-        limit_formatted = params.get(
-            "limit", [bytes('{}'.format(default_limit), encoding)]
-        )
-        offset = cls.convert_param(offset_formatted)
-        limit = cls.convert_param(limit_formatted)
+        default_chat_limit = config.get('default_chat_limit', 20)
+        offset, limit = cls.get_params(params, default_chat_limit)
         db = inject.instance('db')
         station = Station.query_by_station_id(db, receiver_id)
         if station is not None:
@@ -204,14 +210,8 @@ class Chat(object):
     @classmethod
     def get_multiple(cls, sender, params):
         config = inject.instance(Config)
-        offset_formatted = params.get("offset", [b'0'])
         default_limit = config.get('default_chat_list_limit', 10)
-        encoding = config.get('query_encoding', 'utf-8')
-        limit_formatted = params.get(
-            "limit", [bytes('{}'.format(default_limit), encoding)]
-        )
-        offset = cls.convert_param(offset_formatted)
-        limit = cls.convert_param(limit_formatted)
+        offset, limit = cls.get_params(params, default_limit)
         db = inject.instance('db')
         station = Subscriber.get_station_for_user(db, sender.user_id)
         station_chat = cls.get(
@@ -222,8 +222,9 @@ class Chat(object):
         )
         private_chats = []
         for receiver_id in chat_user_ids:
+            default_chat_limit = config.get('default_chat_limit', 20)
             messages = PrivateChat.get(
-                db, receiver_id, sender.user_id, 0, 20
+                db, receiver_id, sender.user_id, 0, default_chat_limit
             )
             unread_count = cls.get_unread_in_private_for_user(
                 sender.user_id, receiver_id

@@ -25,10 +25,7 @@ class MessagesHandler(BaseHandler):
         message = Chat.add(
             self.request.body, self.request.user
         )
-        message_response = MessageResponse(message)
-        # TODO: Separate MessageResponse and ChatResponse into http
-        # TODO: layer like in the line above
-        return message_response.to_dict(), 200
+        return message.to_dict(), 200
 
     @endpoint_wrapper()
     @map_exception(out_of=InvalidPayload, make=BadRequest)
