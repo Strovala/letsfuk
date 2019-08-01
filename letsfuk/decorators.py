@@ -118,3 +118,18 @@ def check_session(**kwargs):
             raise Unauthorized("Unauthorized")
         return wrapper
     return dec
+
+
+def metrics(**kwargs):
+    def dec(func):
+        @wraps(func)
+        def wrapper(self, *args, **kw):
+            t0 = datetime.datetime.utcnow()
+            print('*******', func, 'started')
+            resp = func(self, *args, **kw)
+            diff = datetime.datetime.utcnow() - t0
+            print('=======', func, 'ended, time passed', diff)
+            return resp
+        return wrapper
+    return dec
+

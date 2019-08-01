@@ -8,7 +8,8 @@ from letsfuk.models.chat import (
     Chat, InvalidPayload,
     InvalidLimitOffset,
     ReceiverNotFound,
-    InvalidCount, MessageResponse)
+    InvalidCount
+)
 from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
 
@@ -59,7 +60,7 @@ class ChatMessagesHandler(BaseHandler):
         return chat.to_dict(), 200
 
 
-class   UnreadMessagesHandler(BaseHandler):
+class UnreadMessagesHandler(BaseHandler):
     @endpoint_wrapper()
     @map_exception(
         out_of=(InvalidCount, UserNotFound, StationNotFound, InvalidPayload),
