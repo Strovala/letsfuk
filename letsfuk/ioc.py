@@ -1,6 +1,9 @@
+from pymemcache.client import base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 import testing.postgresql
+
+from letsfuk.cache import Memcache
 from letsfuk.config import Config
 
 
@@ -9,6 +12,9 @@ def configuration(binder):
     connection = config.get('database_url')
     engine = create_engine(connection)
     session_class = scoped_session(sessionmaker(bind=engine))
+    cache = base.Client(('localhost', 11211))
+    Memcache.memcache = cache
+    binder.bind('cache', cache)
     binder.bind_to_provider('db', session_class)
     binder.bind(Config, config)
     binder.bind('db_engine', engine)
