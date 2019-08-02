@@ -38,6 +38,8 @@ class MessagesHandler(BaseHandler):
         station_chat, private_chats = Chat.get_multiple(
             self.request.user, self.request.params
         )
+        total = Chat.get_total_chats(self.request.user)
+        self.set_header('x-total', total)
         return {
             "station_chat": station_chat.to_dict(),
             "private_chats": [chat.to_dict() for chat in private_chats]

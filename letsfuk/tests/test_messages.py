@@ -380,6 +380,11 @@ class TestMessages(BaseAsyncHTTPTestCase):
             }
         )
         self.assertEqual(response.code, 200)
+        totalString = response.headers.get('x-total')
+        self.assertIsNotNone(totalString)
+        total = int(totalString)
+        # Plus one because of station chat
+        self.assertEqual(total, len(private_chats) + 1)
         response_body = json.loads(response.body.decode())
         response_station_chat_dict = response_body.get('station_chat')
         self.assertIsNotNone(response_station_chat_dict)

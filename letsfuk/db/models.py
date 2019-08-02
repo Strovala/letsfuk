@@ -325,6 +325,24 @@ class PrivateChat(Base):
         return total
 
     @classmethod
+    def get_total_chats(cls, db, user_id):
+        user_ids_tuple = db.query(cls.receiver_id, cls.sender_id).filter(
+            or_(
+                cls.receiver_id == user_id,
+                cls.sender_id == user_id,
+                )
+        ).all()
+        user_ids = []
+        for receiver_id, sender_id in user_ids_tuple:
+            if receiver_id != user_id:
+                if receiver_id not in user_ids:
+                    user_ids.append(receiver_id)
+            elif sender_id != user_id:
+                if sender_id not in user_ids:
+                    user_ids.append(sender_id)
+        return len(user_ids)
+
+    @classmethod
     def get_user_ids_for_user_id(cls, db, user_id, offset, limit):
         user_ids_tuple = db.query(cls.receiver_id, cls.sender_id).filter(
             or_(

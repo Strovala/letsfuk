@@ -191,6 +191,13 @@ class Chat(object):
         return total
 
     @classmethod
+    def get_total_chats(cls, user):
+        db = inject.instance('db')
+        total = PrivateChat.get_total_chats(db, user.user_id)
+        # Plus one more for station chat
+        return total + 1
+
+    @classmethod
     def get(cls, receiver_id, sender_id, params):
         # In this format query params are packed
         config = inject.instance(Config)
@@ -221,7 +228,7 @@ class Chat(object):
     @classmethod
     def get_multiple(cls, sender, params):
         config = inject.instance(Config)
-        default_limit = config.get('default_chat_list_limit', 10)
+        default_limit = config.get('default_chat_list_limit', 20)
         offset, limit = cls.get_params(params, default_limit)
         db = inject.instance('db')
         station = Subscriber.get_station_for_user(db, sender.user_id)
