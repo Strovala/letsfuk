@@ -19,6 +19,9 @@ class BaseHandler(RequestHandler, SessionMixin):
         self.set_header(
             'Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS'
         )
+        self.set_header(
+            'Access-Control-Expose-Headers', 'x-total'
+        )
 
     def options(self, *args, **kwargs):
         self.set_status(204)

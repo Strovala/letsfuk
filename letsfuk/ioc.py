@@ -12,7 +12,11 @@ def configuration(binder):
     connection = config.get('database_url')
     engine = create_engine(connection)
     session_class = scoped_session(sessionmaker(bind=engine))
-    cache = base.Client(('localhost', 11211))
+    cache = base.Client(
+        ('localhost', 11211),
+        connect_timeout=60,
+        timeout=5
+    )
     Memcache.memcache = cache
     binder.bind('cache', cache)
     binder.bind_to_provider('db', session_class)

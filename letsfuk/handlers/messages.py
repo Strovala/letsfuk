@@ -57,6 +57,8 @@ class ChatMessagesHandler(BaseHandler):
         chat = Chat.get(
             receiver_id, self.request.user.user_id, self.request.params
         )
+        total = Chat.get_total(receiver_id, self.request.user.user_id)
+        self.set_header('x-total', total)
         return chat.to_dict(), 200
 
 

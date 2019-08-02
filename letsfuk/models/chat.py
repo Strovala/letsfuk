@@ -177,6 +177,20 @@ class Chat(object):
         return MessageResponse(message)
 
     @classmethod
+    def get_total(cls, receiver_id, sender_id):
+        db = inject.instance('db')
+        station = Station.query_by_station_id(db, receiver_id)
+        if station is not None:
+            total = StationChat.get_total(
+                db, station.station_id
+            )
+            return total
+        total = PrivateChat.get_total(
+            db, receiver_id, sender_id
+        )
+        return total
+
+    @classmethod
     def get(cls, receiver_id, sender_id, params):
         # In this format query params are packed
         config = inject.instance(Config)

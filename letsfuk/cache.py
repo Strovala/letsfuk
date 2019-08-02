@@ -1,4 +1,16 @@
 import json
+from functools import wraps
+
+
+def check_memcache(**kwargs):
+    def dec(func):
+        @wraps(func)
+        def wrapper(self, *args, **kw):
+            if self.memcache is None:
+                return
+            return func(self, *args, **kw)
+        return wrapper
+    return dec
 
 
 class Memcache(object):
@@ -6,6 +18,7 @@ class Memcache(object):
     memcache = None
 
     @classmethod
+    @check_memcache()
     def get_dict(cls, key):
         value = cls.memcache.get(key)
         if value is not None:
@@ -13,6 +26,7 @@ class Memcache(object):
         return None
 
     @classmethod
+    @check_memcache()
     def set_dict(cls, key, value):
         json_value = json.dumps(value)
         cls.memcache.set(key, json_value)

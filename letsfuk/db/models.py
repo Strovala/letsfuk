@@ -309,6 +309,22 @@ class PrivateChat(Base):
         return private_chat
 
     @classmethod
+    def get_total(cls, db, receiver_id, sender_id):
+        total = db.query(cls).filter(
+            or_(
+                and_(
+                    cls.receiver_id == receiver_id,
+                    cls.sender_id == sender_id,
+                    ),
+                and_(
+                    cls.receiver_id == sender_id,
+                    cls.sender_id == receiver_id,
+                    ),
+            )
+        ).count()
+        return total
+
+    @classmethod
     def get_user_ids_for_user_id(cls, db, user_id, offset, limit):
         user_ids_tuple = db.query(cls.receiver_id, cls.sender_id).filter(
             or_(
@@ -385,6 +401,13 @@ class StationChat(Base):
             cls.receiver_id == receiver_id
         ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return messages
+
+    @classmethod
+    def get_total(cls, db, receiver_id):
+        total = db.query(cls).filter(
+            cls.receiver_id == receiver_id
+        ).count()
+        return total
 
     def to_dict(self):
         return {

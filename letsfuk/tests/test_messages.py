@@ -126,6 +126,10 @@ class TestMessages(BaseAsyncHTTPTestCase):
             }
         )
         self.assertEqual(response.code, 200)
+        totalString = response.headers.get('x-total')
+        self.assertIsNotNone(totalString)
+        total = int(totalString)
+        self.assertEqual(total, len(messages))
         response_body = json.loads(response.body.decode())
         receiver = response_body.get('receiver')
         receiver_id = receiver.get('id')
