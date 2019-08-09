@@ -54,7 +54,8 @@ def make_app():
             PushUnsubscribeHandler
         ),
         ('/websocket/?', MessageWebSocketHandler),
-        ('/presign/upload?', S3PresignUploadHandler),
+        ('/presign/upload/?', S3PresignUploadHandler),
+        ('/presign/get/?', S3PresignUploadHandler),
     ],
         default_handler_class=DefaultHandler,
         session_factory=factory,

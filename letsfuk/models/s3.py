@@ -3,11 +3,24 @@ import uuid
 import boto3
 import inject
 from botocore.exceptions import ClientError
-
 from letsfuk import Config
 
 
+class InvalidPayload(Exception):
+    pass
+
+
+class S3ClientError(Exception):
+    pass
+
+
 class S3Manager(object):
+    @classmethod
+    def validate_key(cls, payload):
+        key = payload.get('key')
+        if key is None:
+            raise InvalidPayload("You did not provide key!")
+
     @classmethod
     def _create_presigned_url(
             cls, object_name, method='get_object', expiration=60
@@ -30,8 +43,7 @@ class S3Manager(object):
                 ExpiresIn=expiration
             )
         except ClientError as e:
-            print(e)
-            return None
+            raise S3ClientError(e)
         return response
 
     @classmethod
