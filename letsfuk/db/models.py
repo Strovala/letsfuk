@@ -87,6 +87,7 @@ class User(Base):
     username = Column(String, index=True, nullable=False, unique=True)
     email = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
+    avatar_key = Column(String, nullable=True, unique=True)
 
     @classmethod
     def add(cls, db, user_id, username, email, password):
@@ -118,17 +119,27 @@ class User(Base):
             cls.email == email
         ).first()
 
+    @classmethod
+    def update_avatar(cls, db, user_id, avatar_key):
+        user = cls.query_by_user_id(db, user_id)
+        user.avatar_key = avatar_key
+        commit(db)
+        return user
+
     def to_dict(self):
         return {
             "user_id": self.user_id,
             "username": self.username,
             "email": self.email,
+            "avatar_key": self.avatar_key
         }
 
     def __repr__(self):
         return (
-            '<id: {} user_id: {} username: {} email: {}>'.format(
-                self.id, self.user_id, self.username, self.email
+            '<id: {} user_id: {} username: '
+            '{} email: {} avatar_key: {}>'.format(
+                self.id, self.user_id, self.username,
+                self.email, self.avatar_key
             )
         )
 
@@ -210,7 +221,7 @@ class Subscriber(Base):
             and_(
                 cls.station_id == station_id,
                 cls.user_id == user_id,
-            )
+                )
         ).first()
         return subscriber
 
@@ -299,11 +310,11 @@ class PrivateChat(Base):
                 and_(
                     cls.receiver_id == receiver_id,
                     cls.sender_id == sender_id,
-                ),
+                    ),
                 and_(
                     cls.receiver_id == sender_id,
                     cls.sender_id == receiver_id,
-                ),
+                    ),
             )
         ).order_by(desc(cls.sent_at)).offset(offset).limit(limit).all()
         return private_chat
@@ -348,7 +359,7 @@ class PrivateChat(Base):
             or_(
                 cls.receiver_id == user_id,
                 cls.sender_id == user_id,
-            )
+                )
         ).order_by(desc(cls.sent_at)).all()
         user_ids = []
         for receiver_id, sender_id in user_ids_tuple:
