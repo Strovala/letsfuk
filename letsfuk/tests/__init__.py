@@ -11,11 +11,10 @@ from tornado.testing import AsyncHTTPTestCase
 from letsfuk import Config
 from letsfuk.models.user import User as UserModel
 from letsfuk.db import Base, commit
-from letsfuk.db.models import Station, Subscriber, PrivateChat, StationChat, \
-    PushNotification
-from letsfuk.db.models import User
-from letsfuk.db.models import Session
-from letsfuk.db.models import Unread
+from letsfuk.db.models import (
+    Station, Subscriber, PrivateChat, StationChat,
+    PushNotification, User, Session, Unread
+)
 from letsfuk.ioc import testing_configuration
 
 # Set up database for all tests
@@ -331,3 +330,12 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
             db, user.user_id, endpoint, auth, p256dh
         )
         return subscriber, session, user
+
+    def ensure_avatar(self, user_id, avatar_key=None):
+        db = inject.instance('db')
+        user = User.query_by_user_id(db, user_id)
+        if avatar_key is None:
+            random_uuid = self.generator.uuid.generate()
+            avatar_key = "{}/{}".format(user.username, random_uuid)
+        user = User.update_avatar(db, user, avatar_key)
+        return user

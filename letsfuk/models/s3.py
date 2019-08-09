@@ -51,3 +51,11 @@ class S3Manager(object):
         key_uuid = str(uuid.uuid4())
         key = "{}/{}".format(user.username, key_uuid)
         return key
+
+    @classmethod
+    def delete(cls, object_name):
+        s3 = boto3.resource("s3")
+        config = inject.instance(Config)
+        bucket_name = config.get('s3_bucket', 'letsfuk')
+        obj = s3.Object(bucket_name, object_name)
+        obj.delete()

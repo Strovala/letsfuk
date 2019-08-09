@@ -19,13 +19,3 @@ class S3PresignUploadHandler(BaseHandler):
             "url": response,
             "key": key
         }, 200
-
-    @endpoint_wrapper()
-    @check_session()
-    @resolve_user()
-    @resolve_body()
-    def post(self):
-        key = self.request.body.get('key')
-        return {
-           "key": key
-        }, 200

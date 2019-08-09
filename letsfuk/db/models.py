@@ -120,8 +120,7 @@ class User(Base):
         ).first()
 
     @classmethod
-    def update_avatar(cls, db, user_id, avatar_key):
-        user = cls.query_by_user_id(db, user_id)
+    def update_avatar(cls, db, user, avatar_key):
         user.avatar_key = avatar_key
         commit(db)
         return user

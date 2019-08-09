@@ -138,3 +138,87 @@ class TestUsers(BaseAsyncHTTPTestCase):
             method="GET",
         )
         self.assertEqual(response.code, 401)
+
+    def test_update_avatar(self):
+        session, user = self.ensure_login()
+        random_uuid = self.generator.uuid.generate()
+        avatar_key = "{}/{}".format(user.username, random_uuid)
+        body = {
+            "avatar_key": avatar_key
+        }
+        response = self.fetch(
+            '/users/{}'.format(user.user_id),
+            method="PATCH",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(avatar_key, response_body.get('avatar_key'))
+
+    def test_update_avatar_already_has_avatar(self):
+        session, user = self.ensure_login()
+        user = self.ensure_avatar(user.user_id)
+        random_uuid = self.generator.uuid.generate()
+        avatar_key = "{}/{}".format(user.username, random_uuid)
+        body = {
+            "avatar_key": avatar_key
+        }
+        response = self.fetch(
+            '/users/{}'.format(user.user_id),
+            method="PATCH",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(avatar_key, response_body.get('avatar_key'))
+
+    def test_update_avatar_passed_int(self):
+        session, user = self.ensure_login()
+        body = {
+            "avatar_key": 12
+        }
+        response = self.fetch(
+            '/users/{}'.format(user.user_id),
+            method="PATCH",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 400)
+
+    def test_update_avatar_passed_empty(self):
+        session, user = self.ensure_login()
+        body = {
+            "avatar_key": ""
+        }
+        response = self.fetch(
+            '/users/{}'.format(user.user_id),
+            method="PATCH",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 400)
+
+    def test_update_avatar_no_avatar_key(self):
+        session, user = self.ensure_login()
+        body = {
+            "blant": ""
+        }
+        response = self.fetch(
+            '/users/{}'.format(user.user_id),
+            method="PATCH",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 400)

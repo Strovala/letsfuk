@@ -17,7 +17,7 @@ class BaseHandler(RequestHandler, SessionMixin):
             "Access-Control-Allow-Headers", "session-id, content-type"
         )
         self.set_header(
-            'Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS'
+            'Access-Control-Allow-Methods', 'POST, GET, PUT, PATCH, OPTIONS'
         )
         self.set_header(
             'Access-Control-Expose-Headers', 'x-total'

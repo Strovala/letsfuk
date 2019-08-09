@@ -2,8 +2,6 @@ import uuid
 import inject
 from datetime import datetime
 
-import json
-
 from letsfuk import Config
 from letsfuk.cache import Memcache
 from letsfuk.db.models import (

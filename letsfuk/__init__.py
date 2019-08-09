@@ -19,6 +19,7 @@ from letsfuk.handlers.messages import (
 from letsfuk.handlers.push_notifications import (
     PushSubscribeHandler, PushUnsubscribeHandler,
     PushCheckHandler)
+from letsfuk.handlers.s3 import S3PresignUploadHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler, WhoAmIHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
@@ -53,6 +54,7 @@ def make_app():
             PushUnsubscribeHandler
         ),
         ('/websocket/?', MessageWebSocketHandler),
+        ('/presign/upload?', S3PresignUploadHandler),
     ],
         default_handler_class=DefaultHandler,
         session_factory=factory,
