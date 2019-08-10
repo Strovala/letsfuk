@@ -318,11 +318,18 @@ class ChatResponse(object):
 
         # TODO: Now that avatar_key is changable maybe update cache or clear it
         # when avatar is changed
+
+        # self.messages = [
+        #     Memcache.get_or_set_dict(
+        #         'messages-{}'.format(message.message_id),
+        #         self._to_message_response_dict, message
+        #     )
+        #     for message in reversed(messages)
+        # ]
+
+        # for now, no caching
         self.messages = [
-            Memcache.get_or_set_dict(
-                'messages-{}'.format(message.message_id),
-                self._to_message_response_dict, message
-            )
+            MessageResponse(message).to_dict()
             for message in reversed(messages)
         ]
 
