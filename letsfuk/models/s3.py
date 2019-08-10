@@ -14,13 +14,11 @@ class S3ClientError(Exception):
     pass
 
 
-class S3Manager(object):
-    @classmethod
-    def validate_key(cls, payload):
-        key = payload.get('key')
-        if key is None:
-            raise InvalidPayload("You did not provide key!")
+class KeyNotFound(Exception):
+    pass
 
+
+class S3Manager(object):
     @classmethod
     def _create_presigned_url(
             cls, object_name, method='get_object', expiration=60
@@ -71,3 +69,17 @@ class S3Manager(object):
         bucket_name = config.get('s3_bucket', 'letsfuk')
         obj = s3.Object(bucket_name, object_name)
         obj.delete()
+
+    @classmethod
+    def get(cls, object_name):
+        s3 = boto3.resource("s3")
+        config = inject.instance(Config)
+        bucket_name = config.get('s3_bucket', 'letsfuk')
+        obj = s3.Object(bucket_name, object_name)
+        try:
+            return obj.get()['Body'].read()
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                raise KeyNotFound(
+                    "Provided key: {} not found".format(object_name)
+                )

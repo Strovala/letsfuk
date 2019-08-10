@@ -13,6 +13,7 @@ from letsfuk.config import Config
 from letsfuk.db import Base
 from letsfuk.handlers import DefaultHandler
 from letsfuk.handlers.auth import LoginHandler, LogoutHandler
+from letsfuk.handlers.images import ImagesHandler
 from letsfuk.handlers.messages import (
     MessagesHandler, ChatMessagesHandler, UnreadMessagesHandler
 )
@@ -38,8 +39,8 @@ def make_app():
     return Application([
         ('/auth/login?', LoginHandler),
         ('/auth/logout?', LogoutHandler),
-        ('/users?', UsersHandler),
         ('/whoami?', WhoAmIHandler),
+        ('/users?', UsersHandler),
         ('/users/({})/?'.format(uuid_regex), UserHandler),
         ('/users/({})/station/?'.format(uuid_regex), SubscribeHandler),
         ('/stations/?', StationsHandler),
@@ -55,7 +56,7 @@ def make_app():
         ),
         ('/websocket/?', MessageWebSocketHandler),
         ('/presign/upload/?', S3PresignUploadHandler),
-        ('/presign/get/?', S3PresignUploadHandler),
+        ('/images/?', ImagesHandler),
     ],
         default_handler_class=DefaultHandler,
         session_factory=factory,

@@ -45,6 +45,37 @@ def endpoint_wrapper(**kwargs):
     return dec
 
 
+def image_endpoint_wrapper(**kwargs):
+    def dec(func):
+        @wraps(func)
+        def wrapper(self, *args, **kw):
+            try:
+                self.request.params = dict()
+                for param in self.request.arguments:
+                    config = inject.instance(Config)
+                    encoding = config.get('param_encoding', 'utf-8')
+                    bytes_param = self.request.arguments[param][0]
+                    str_param = bytes_param.decode(encoding)
+                    self.request.params[param] = str_param
+                data, status_code = func(self, *args, **kw)
+            except HttpException as e:
+                response = {
+                    "status_code": e.status_code,
+                    "text": e.text
+                }
+                status_code = e.status_code
+                self.send_response(response, status_code)
+                return
+            if status_code == 204:
+                self.set_status(204)
+                return
+            self.set_status(status_code)
+            self.set_header('Content-Type', 'image/jpeg')
+            self.write(data)
+        return wrapper
+    return dec
+
+
 def map_exception(**kwargs):
     def dec(func):
         @wraps(func)

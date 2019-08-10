@@ -316,6 +316,8 @@ class ChatResponse(object):
                 is_station=True
             )
 
+        # TODO: Now that avatar_key is changable maybe update cache or clear it
+        # when avatar is changed
         self.messages = [
             Memcache.get_or_set_dict(
                 'messages-{}'.format(message.message_id),
