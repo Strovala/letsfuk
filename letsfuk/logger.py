@@ -10,7 +10,7 @@ PRODUCTION_CONFIG = {
     "disable_existing_loggers": False,
     "syslog": {
         "connection_type": "port",
-        "host": "host",
+        "host": "127.0.0.1",
         "port": 514
     },
     "formatters": {
