@@ -41,7 +41,7 @@ PRODUCTION_CONFIG = {
             "level": "INFO",
             "formatter": "syslog",
             "class": "logging.handlers.SysLogHandler",
-            "address": "/dev/log",
+            "address": '/dev/log',
             "facility": "local1"
         },
         "syslog_audit": {
@@ -166,4 +166,35 @@ def configure_production_logging(application, config=None):
 
 
 def _configure_logging(application, production, basic_config, override=None):
+    template = basic_config["formatters"]["syslog"]["format"]
+    basic_config["formatters"]["syslog"]["format"] = template.format(
+        application.lower())
+    template = basic_config["formatters"]["syslog_audit"]["format"]
+    basic_config["formatters"]["syslog_audit"]["format"] = template.format(
+        application.lower())
 
+    # Merge override if exists
+    if override is not None:
+        config = _merge_log_configs(basic_config, override)
+    else:
+        config = basic_config
+
+    if production:
+        # Define syslog connection
+        if config['syslog']['connection_type'] == 'port':
+            syslog_address = (config['syslog']['host'],
+                              config['syslog']['port'])
+        else:
+            if platform == 'darwin':
+                syslog_address = '/var/run/syslog'
+            else:
+                syslog_address = '/dev/log'
+
+        config['handlers']['syslog']['address'] = syslog_address
+        config['handlers']['syslog_audit']['address'] = syslog_address
+
+    logging.Formatter.converter = time.gmtime
+    # Configure logging
+    logging.config.dictConfig(config)
+    logger.info('Configuring logging for %s completed.',
+                'production' if production else 'development')
