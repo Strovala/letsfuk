@@ -22,6 +22,7 @@ from letsfuk.handlers.push_notifications import (
     PushCheckHandler)
 from letsfuk.handlers.s3 import S3PresignUploadHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
+from letsfuk.handlers.status import StatusHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler, WhoAmIHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
 from letsfuk.logger import (
@@ -42,6 +43,7 @@ def make_app():
     database_url = config.get('database_url')
     factory = make_session_factory(database_url)
     return Application([
+        ('/status/?', StatusHandler),
         ('/auth/login?', LoginHandler),
         ('/auth/logout?', LogoutHandler),
         ('/whoami?', WhoAmIHandler),
@@ -84,7 +86,7 @@ def main():
     ssl_ctx = None
     development = cfg.get('development', False)
     if development:
-        configure_production_logging('letsfuk')
+        configure_develop_logging('letsfuk')
     else:
         configure_production_logging('letsfuk')
     if not development:
