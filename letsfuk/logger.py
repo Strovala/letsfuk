@@ -156,7 +156,7 @@ def configure_develop_logging(application, config=None):
     )
 
 
-def configure_production_logging(application, config):
+def configure_production_logging(application, config=None):
     _configure_logging(
         application,
         production=True,
