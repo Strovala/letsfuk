@@ -41,7 +41,7 @@ PRODUCTION_CONFIG = {
             "level": "INFO",
             "formatter": "syslog",
             "class": "logging.handlers.SysLogHandler",
-            "address": '/dev/log',
+            "address": None,
             "facility": "local1"
         },
         "syslog_audit": {
@@ -180,15 +180,10 @@ def _configure_logging(application, production, basic_config, override=None):
         config = basic_config
 
     if production:
-        # Define syslog connection
-        if config['syslog']['connection_type'] == 'port':
-            syslog_address = (config['syslog']['host'],
-                              config['syslog']['port'])
+        if platform == 'darwin':
+            syslog_address = '/var/run/syslog'
         else:
-            if platform == 'darwin':
-                syslog_address = '/var/run/syslog'
-            else:
-                syslog_address = '/dev/log'
+            syslog_address = '/dev/log'
 
         config['handlers']['syslog']['address'] = syslog_address
         config['handlers']['syslog_audit']['address'] = syslog_address

@@ -84,7 +84,7 @@ def main():
     ssl_ctx = None
     development = cfg.get('development', False)
     if development:
-        configure_develop_logging('letsfuk')
+        configure_production_logging('letsfuk')
     else:
         configure_production_logging('letsfuk')
     if not development:
