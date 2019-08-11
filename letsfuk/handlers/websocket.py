@@ -1,5 +1,9 @@
 import json
+import logging
+
 from tornado.websocket import WebSocketHandler
+
+logger = logging.getLogger(__name__)
 
 
 class MessageWebSocketHandler(WebSocketHandler):
@@ -20,12 +24,18 @@ class MessageWebSocketHandler(WebSocketHandler):
                     data = message.get('data')
                     user_id = data.get('id')
                     self.live_web_sockets[user_id] = self
+                    logger.info(
+                        "Web socket opened for user_id: {}".format(user_id)
+                    )
 
     def on_close(self):
         for user_id in self.live_web_sockets:
             ws = self.live_web_sockets[user_id]
             if ws == self:
                 _ = self.live_web_sockets.pop(user_id)
+                logger.info(
+                    "Web socket closed for user_id: {}".format(user_id)
+                )
                 break
 
     @classmethod
@@ -36,3 +46,8 @@ class MessageWebSocketHandler(WebSocketHandler):
                 "event": event,
                 "data": data
             })
+            logger.info(
+                "Sent message to user_id: {}, event: {}, data: {}".format(
+                    user_id, event, data
+                )
+            )

@@ -1,9 +1,13 @@
+import logging
+
 import inject
 import json
 from pywebpush import webpush, WebPushException
 
 from letsfuk import Config
 from letsfuk.db.models import PushNotification as DbPushNotification
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidPayload(Exception):
@@ -101,6 +105,12 @@ class PushNotifications(object):
         device_browsers = DbPushNotification.query_by_user_id(db, user_id)
         for device_browser in device_browsers:
             cls.send(device_browser, data)
+            logger.info(
+                "Sent push notification to "
+                "user_id: {}, device_browser: {}, data: {}".format(
+                    user_id, device_browser, data
+                )
+            )
 
     @classmethod
     def check(cls, user, params):

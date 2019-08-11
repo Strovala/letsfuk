@@ -1,12 +1,14 @@
 import datetime
 import uuid
-
+import logging
 import bcrypt
 import inject
 
 from letsfuk import Config
 from letsfuk.db.models import Session
 from letsfuk.db.models import User
+
+logger = logging.getLogger(__name__)
 
 
 class WrongCredentials(Exception):
@@ -41,9 +43,13 @@ class Auth(object):
         now = datetime.datetime.utcnow()
         expires_at = now + datetime.timedelta(seconds=session_ttl)
         _ = Session.add(db, session_id, user.user_id, expires_at)
+        logger.info("User: {} logged in, session_id: {}".format(
+            user, session_id)
+        )
         return user, session_id
 
     @classmethod
     def logout(cls, session):
         db = inject.instance('db')
         _ = Session.delete(db, session)
+        logger.info("Session {} deleted", session)

@@ -1,9 +1,9 @@
+import logging
 import uuid
 import inject
 from datetime import datetime
 
 from letsfuk import Config
-from letsfuk.cache import Memcache
 from letsfuk.db.models import (
     User, Subscriber, Station, PrivateChat,
     StationChat, Unread
@@ -11,6 +11,8 @@ from letsfuk.db.models import (
 from letsfuk.models.push_notifications import PushNotifications
 from letsfuk.models.station import StationNotFound
 from letsfuk.models.user import UserNotFound
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidPayload(Exception):
@@ -138,6 +140,7 @@ class Chat(object):
             message = PrivateChat.add(
                 db, message_id, user_id, sender.user_id, text, sent_at
             )
+            logger.info("Message")
             unread = Unread.add(db, user_id, sender_id=sender.user_id)
             message_response = MessageResponse(message)
             data = {

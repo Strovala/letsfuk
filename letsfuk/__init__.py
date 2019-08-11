@@ -1,6 +1,6 @@
 import argparse
 import ssl
-
+import logging
 import inject
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -24,11 +24,16 @@ from letsfuk.handlers.s3 import S3PresignUploadHandler
 from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler, WhoAmIHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
+from letsfuk.logger import (
+    configure_develop_logging, configure_production_logging
+)
 
 uuid_regex = (
     "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}"
     "\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
 )
+
+logger = logging.getLogger(__name__)
 
 
 def make_app():
@@ -78,6 +83,10 @@ def main():
     cfg = inject.instance(Config)
     ssl_ctx = None
     development = cfg.get('development', False)
+    if development:
+        configure_develop_logging('letsfuk')
+    else:
+        configure_production_logging('letsfuk')
     if not development:
         ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_ctx.load_cert_chain(cfg.get('crt'), cfg.get('key'))
@@ -85,8 +94,9 @@ def main():
         app,
         ssl_options=ssl_ctx
     )
-    http_server.listen(options.port)
-    print('Listening on http://localhost:%i' % options.port)
+    port = cfg.get('port', 8888)
+    http_server.listen(port)
+    logger.info('Listening on http://localhost:{}'.format(port))
     IOLoop.current().start()
 
 

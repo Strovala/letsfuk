@@ -59,6 +59,9 @@ class S3Manager(object):
     @classmethod
     def generate_key_for_user(cls, user):
         key_uuid = str(uuid.uuid4())
+        # TODO: Consider changing this username to user id
+        # maybe username and email will not be unique anymore
+        # Also username not case sensitive
         key = "{}/{}".format(user.username, key_uuid)
         return key
 

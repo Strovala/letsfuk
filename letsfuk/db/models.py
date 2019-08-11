@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import (
     Column, UniqueConstraint, DateTime, ForeignKey, Integer, String, Numeric,
     func, or_, and_, asc, desc
