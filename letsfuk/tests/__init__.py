@@ -1,5 +1,5 @@
 import uuid
-from random import choice, uniform
+from random import choice, uniform, random
 
 import inject
 from math import sqrt
@@ -240,9 +240,16 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.utcnow()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = PrivateChat.add(
-            db, message_id, receiver_id, sender_id, text, now
-        )
+        coin = random()
+        if coin > 0.8:
+            message = PrivateChat.add(
+                db, message_id, receiver_id, sender_id, text, None, now
+            )
+        else:
+            # Make image message
+            message = PrivateChat.add(
+                db, message_id, receiver_id, sender_id, None, text, now
+            )
         return message
 
     def add_group_message(self, sender_id, receiver_id):
@@ -252,9 +259,16 @@ class BaseAsyncHTTPTestCase(AsyncHTTPTestCase):
         now = datetime.utcnow()
         sender_id = str(sender_id)
         receiver_id = str(receiver_id)
-        message = StationChat.add(
-            db, message_id, receiver_id, sender_id, text, now
-        )
+        coin = random()
+        if coin > 0.8:
+            message = StationChat.add(
+                db, message_id, receiver_id, sender_id, text, None, now
+            )
+        else:
+            # Make image message
+            message = StationChat.add(
+                db, message_id, receiver_id, sender_id, None, text, now
+            )
         return message
 
     def make_station_chat(self, station, users=None):

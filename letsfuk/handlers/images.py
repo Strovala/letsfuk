@@ -12,6 +12,6 @@ class ImagesHandler(BaseHandler):
     @map_exception(out_of=KeyNotFound, make=NotFound)
     @check_session()
     def get(self):
-        key = self.request.params.get('key')
-        data = S3Manager.get(key)
+        S3Manager.verify_key(self.request.params)
+        data = S3Manager.get(self.request.params)
         return data, 200

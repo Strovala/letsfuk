@@ -54,17 +54,32 @@ class Chat(object):
 
     @classmethod
     def verify_text(cls, text):
-        if text is None:
-            raise InvalidPayload("Invalid text")
-        if len(text) > 600:
-            raise InvalidPayload("Text too long, 600 chars is enough")
+        if text is not None:
+            if type(text) != str:
+                raise InvalidPayload("Text must be string!")
+            if text == "":
+                raise InvalidPayload("Text must not be empty!")
+            if len(text) > 600:
+                raise InvalidPayload("Text too long, 600 chars is enough!")
+
+    @classmethod
+    def verify_image_key(cls, image_key):
+        if image_key is not None:
+            if type(image_key) != str:
+                raise InvalidPayload("Image key must be string!")
+            if image_key == "":
+                raise InvalidPayload("Image key must not be empty!")
 
     @classmethod
     def verify_add_message_payload(cls, payload):
         text = payload.get("text")
         user_id = payload.get("user_id")
+        image_key = payload.get("image_key")
+        cls.verify_image_key(image_key)
         cls.verify_text(text)
         cls.verify_user(user_id)
+        if text is None and image_key is None:
+            raise InvalidPayload("You must provide either text or image_key!")
 
     @classmethod
     def verify_int(cls, value):
@@ -128,38 +143,41 @@ class Chat(object):
             )
 
     @classmethod
-    def add(cls, payload, sender):
+    def add_private_message(
+            cls, message_id, user_id, sender, text, image_key, sent_at
+    ):
         db = inject.instance('db')
-        user_id = payload.get("user_id")
-        text = payload.get("text")
-        station = Subscriber.get_station_for_user(db, sender.user_id)
-        message_id = str(uuid.uuid4())
-        sent_at = datetime.utcnow()
+        message = PrivateChat.add(
+            db, message_id, user_id, sender.user_id, text, image_key, sent_at
+        )
+        unread = Unread.add(db, user_id, sender_id=sender.user_id)
+        message_response = MessageResponse(message)
+        data = {
+            "is_station": False,
+            "unread": unread.count
+        }
+        data.update(message_response.to_dict())
         from letsfuk import MessageWebSocketHandler
-        if user_id is not None:
-            message = PrivateChat.add(
-                db, message_id, user_id, sender.user_id, text, sent_at
-            )
-            logger.info("Message")
-            unread = Unread.add(db, user_id, sender_id=sender.user_id)
-            message_response = MessageResponse(message)
-            data = {
-                "is_station": False,
-                "unread": unread.count
-            }
-            data.update(message_response.to_dict())
-            MessageWebSocketHandler.send_message(
-                user_id, event='message',
-                data=data
-            )
-            PushNotifications.send_to_user(user_id, data)
-            return MessageResponse(message)
+        MessageWebSocketHandler.send_message(
+            user_id, event='message',
+            data=data
+        )
+        PushNotifications.send_to_user(user_id, data)
+        return MessageResponse(message)
+
+    @classmethod
+    def add_station_message(
+            cls, message_id, station, sender, text, image_key, sent_at
+    ):
+        db = inject.instance('db')
         message = StationChat.add(
-            db, message_id, station.station_id, sender.user_id, text, sent_at
+            db, message_id, station.station_id, sender.user_id,
+            text, image_key, sent_at
         )
         station_users = Subscriber.get_users_for_station(
             db, station.station_id
         )
+        from letsfuk import MessageWebSocketHandler
         for station_user in station_users:
             if station_user.user_id != sender.user_id:
                 unread = Unread.add(
@@ -176,6 +194,23 @@ class Chat(object):
                     data=data
                 )
         return MessageResponse(message)
+
+    @classmethod
+    def add(cls, payload, sender):
+        db = inject.instance('db')
+        user_id = payload.get("user_id")
+        image_key = payload.get("image_key")
+        text = payload.get("text")
+        message_id = str(uuid.uuid4())
+        sent_at = datetime.utcnow()
+        if user_id is not None:
+            return cls.add_private_message(
+                message_id, user_id, sender, text, image_key, sent_at
+            )
+        station = Subscriber.get_station_for_user(db, sender.user_id)
+        return cls.add_station_message(
+            message_id, station, sender, text, image_key, sent_at
+        )
 
     @classmethod
     def get_total(cls, receiver_id, sender_id):

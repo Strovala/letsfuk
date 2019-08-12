@@ -287,17 +287,20 @@ class PrivateChat(Base):
         UUID, ForeignKey('users.user_id'), nullable=True
     )
     sent_at = Column(DateTime, nullable=False)
-    text = Column(String(600), nullable=False)
+    text = Column(String(600), nullable=True)
+    image_key = Column(String, nullable=True)
 
     @classmethod
     def add(
-            cls, db, message_id, receiver_id, sender_id, text, sent_at
+        cls, db, message_id, receiver_id, sender_id,
+        text, image_key, sent_at
     ):
         message = PrivateChat(
             message_id=message_id,
             receiver_id=receiver_id,
             sender_id=sender_id,
             text=text,
+            image_key=image_key,
             sent_at=sent_at
         )
         db.add(message)
@@ -385,13 +388,16 @@ class PrivateChat(Base):
             "receiver_id": self.receiver_id,
             "sender_id": self.sender_id,
             "sent_at": str(self.sent_at),
-            "text": self.text
+            "text": self.text,
+            "image_key": self.image_key
         }
 
     def __repr__(self):
         return (
-            '<id: {} message_id: {} receiver_id: {} sender_id: {}>'.format(
-                self.id, self.message_id, self.receiver_id, self.sender_id
+            '<id: {} message_id: {} receiver_id: {} sender_id: {} '
+            'text: {} image_key: {}>'.format(
+                self.id, self.message_id, self.receiver_id, self.sender_id,
+                self.text, self.image_key
             )
         )
 
@@ -408,17 +414,20 @@ class StationChat(Base):
         UUID, ForeignKey('users.user_id'), nullable=True
     )
     sent_at = Column(DateTime, nullable=False)
-    text = Column(String(600), nullable=False)
+    text = Column(String(600), nullable=True)
+    image_key = Column(String, nullable=True)
 
     @classmethod
     def add(
-            cls, db, message_id, receiver_id, sender_id, text, sent_at
+        cls, db, message_id, receiver_id, sender_id,
+        text, image_key, sent_at
     ):
         message = StationChat(
             message_id=message_id,
             receiver_id=receiver_id,
             sender_id=sender_id,
             text=text,
+            image_key=image_key,
             sent_at=sent_at
         )
         db.add(message)
@@ -445,13 +454,16 @@ class StationChat(Base):
             "receiver_id": self.receiver_id,
             "sender_id": self.sender_id,
             "sent_at": str(self.sent_at),
-            "text": self.text
+            "text": self.text,
+            "image_key": self.image_key
         }
 
     def __repr__(self):
         return (
-            '<id: {} message_id: {} receiver_id: {} sender_id: {}>'.format(
-                self.id, self.message_id, self.receiver_id, self.sender_id
+            '<id: {} message_id: {} receiver_id: {} '
+            'sender_id: {} text: {} image_key: {}>'.format(
+                self.id, self.message_id, self.receiver_id,
+                self.sender_id, self.text, self.image_key
             )
         )
 

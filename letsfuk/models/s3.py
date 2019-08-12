@@ -20,6 +20,16 @@ class KeyNotFound(Exception):
 
 class S3Manager(object):
     @classmethod
+    def verify_key(cls, params):
+        key = params.get('key')
+        if key is None:
+            raise InvalidPayload("You must provide a key!")
+        if type(key) != str:
+            raise InvalidPayload("Image key must be string!")
+        if key == "":
+            raise InvalidPayload("Image key must not be empty!")
+
+    @classmethod
     def _create_presigned_url(
             cls, object_name, method='get_object', expiration=60
     ):
@@ -74,7 +84,8 @@ class S3Manager(object):
         obj.delete()
 
     @classmethod
-    def get(cls, object_name):
+    def get(cls, params):
+        object_name = params.get('key')
         s3 = boto3.resource("s3")
         config = inject.instance(Config)
         bucket_name = config.get('s3_bucket', 'letsfuk')

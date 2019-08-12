@@ -62,6 +62,51 @@ class TestMessages(BaseAsyncHTTPTestCase):
         sender_response = response_body.get('sender')
         self.assertEqual(user.user_id, sender_response.get('user_id'))
 
+    def test_add_image_message_to_station(self):
+        session, user, station = self.prepare_for_sending_message_to_station()
+        text = self.generator.text.generate()
+        body = {
+            "image_key": text
+        }
+        response = self.fetch(
+            '/messages',
+            method="POST",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(text, response_body.get('image_key'))
+        receiver_id = response_body.get('receiver_id')
+        self.assertEqual(station.station_id, receiver_id)
+        sender_response = response_body.get('sender')
+        self.assertEqual(user.user_id, sender_response.get('user_id'))
+
+    def test_add_image_message_to_user(self):
+        session, user, receiver, _ = self.prepare_for_sending_message_to_user()
+        text = self.generator.text.generate()
+        body = {
+            "image_key": text,
+            "user_id": receiver.user_id
+        }
+        response = self.fetch(
+            '/messages',
+            method="POST",
+            body=json.dumps(body).encode('utf-8'),
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        self.assertEqual(text, response_body.get('image_key'))
+        receiver_id = response_body.get('receiver_id')
+        self.assertEqual(receiver.user_id, receiver_id)
+        sender_response = response_body.get('sender')
+        self.assertEqual(user.user_id, sender_response.get('user_id'))
+
     def test_add_message_to_user_invalid_user(self):
         session, _, _, _ = self.prepare_for_sending_message_to_user()
         text = self.generator.text.generate()
@@ -222,7 +267,10 @@ class TestMessages(BaseAsyncHTTPTestCase):
         for i in range(len(response_messages)):
             response_message = response_messages[i]
             message = messages[i]
-            self.assertEqual(message.text, response_message.get('text'))
+            text = response_message.get('text')
+            image_key = response_message.get('image_key')
+            self.assertEqual(message.text, text)
+            self.assertEqual(message.image_key, image_key)
             self.assertEqual(
                 str(message.sent_at), response_message.get('sent_at')
             )

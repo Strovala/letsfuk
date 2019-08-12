@@ -80,7 +80,10 @@ class Station(object):
         message_id = str(uuid.uuid4())
         god_text = config.get('god_text')
         god_sent_at = config.get('god_sent_at')
-        StationChat.add(db, message_id, station.station_id, user.user_id, god_text, god_sent_at)
+        StationChat.add(
+            db, message_id, station.station_id, user.user_id,
+            god_text, None, god_sent_at
+        )
 
 
 class Subscriber(object):
