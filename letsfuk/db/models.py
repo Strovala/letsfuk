@@ -116,6 +116,13 @@ class User(Base):
         ).first()
 
     @classmethod
+    def search_by_username(cls, db, username):
+        search = '{}%'.format(username)
+        return db.query(cls).filter(
+            cls.username.like(search)
+        ).all()
+
+    @classmethod
     def query_by_email(cls, db, email):
         return db.query(cls).filter(
             cls.email == email

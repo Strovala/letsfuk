@@ -137,3 +137,12 @@ class User(object):
             S3Manager.delete(user.avatar_key)
         user = DbUser.update_avatar(db, user, avatar_key)
         return user
+
+    @classmethod
+    def search_by_username(cls, params):
+        username = params.get('username', '')
+        if username == '':
+            return []
+        db = inject.instance('db')
+        users = DbUser.search_by_username(db, username)
+        return users

@@ -44,10 +44,10 @@ def make_app():
     factory = make_session_factory(database_url)
     return Application([
         ('/status/?', StatusHandler),
-        ('/auth/login?', LoginHandler),
-        ('/auth/logout?', LogoutHandler),
-        ('/whoami?', WhoAmIHandler),
-        ('/users?', UsersHandler),
+        ('/auth/login/?', LoginHandler),
+        ('/auth/logout/?', LogoutHandler),
+        ('/whoami/?', WhoAmIHandler),
+        ('/users/?', UsersHandler),
         ('/users/({})/?'.format(uuid_regex), UserHandler),
         ('/users/({})/station/?'.format(uuid_regex), SubscribeHandler),
         ('/stations/?', StationsHandler),

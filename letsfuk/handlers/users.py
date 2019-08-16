@@ -22,6 +22,13 @@ class UsersHandler(BaseHandler):
         user = User.add(self.request.body)
         return user.to_dict(), 200
 
+    @endpoint_wrapper()
+    def get(self):
+        users = User.search_by_username(self.request.params)
+        return {
+            "users": [user.to_dict() for user in users]
+        }, 200
+
 
 class UserHandler(BaseHandler):
     @endpoint_wrapper()
