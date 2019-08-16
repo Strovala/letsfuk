@@ -119,7 +119,7 @@ class User(Base):
     def search_by_username(cls, db, username):
         search = '{}%'.format(username)
         return db.query(cls).filter(
-            cls.username.like(search)
+            func.lower(cls.username).like(search.lower())
         ).all()
 
     @classmethod

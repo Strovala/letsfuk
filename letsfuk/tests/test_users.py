@@ -224,7 +224,7 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_get_users_search_by_username(self):
-        session, user_1 = self.ensure_login(username='strovala')
+        session, user_1 = self.ensure_login(username='Strovala')
         _, user_2 = self.ensure_login(username='strovaletina')
         search = 'stro'
         response = self.fetch(
