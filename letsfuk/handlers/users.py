@@ -23,10 +23,17 @@ class UsersHandler(BaseHandler):
         return user.to_dict(), 200
 
     @endpoint_wrapper()
+    @check_session()
+    @resolve_user()
     def get(self):
         users = User.search_by_username(self.request.params)
+        # Exclude current user
         return {
-            "users": [user.to_dict() for user in users]
+            "users": [
+                user.to_dict()
+                for user in users
+                if user.user_id != self.request.user.user_id
+            ]
         }, 200
 
 

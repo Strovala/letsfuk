@@ -224,9 +224,10 @@ class TestUsers(BaseAsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
 
     def test_get_users_search_by_username(self):
-        session, user_1 = self.ensure_login(username='Strovala')
-        _, user_2 = self.ensure_login(username='strovaletina')
-        search = 'stro'
+        session, user = self.ensure_login(username='Strovala')
+        _, user_1 = self.ensure_login(username='strovaletina')
+        _, user_2 = self.ensure_login(username='straja')
+        search = 'str'
         response = self.fetch(
             '/users?username={}'.format(search),
             method="GET",
@@ -239,3 +240,19 @@ class TestUsers(BaseAsyncHTTPTestCase):
         users = response_body.get('users')
         self.assertEqual(users[0].get('username'), user_1.username)
         self.assertEqual(users[1].get('username'), user_2.username)
+
+    def test_get_users_search_by_username_empty(self):
+        session, _ = self.ensure_login()
+        search = ''
+        response = self.fetch(
+            '/users?username={}'.format(search),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        users = response_body.get('users')
+        self.assertEqual(len(users), 0)
+
