@@ -4,7 +4,7 @@ import logging
 import inject
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from tornado.options import define, options
+from tornado.options import define
 from tornado.web import Application
 from tornado_sqlalchemy import make_session_factory
 
@@ -21,7 +21,10 @@ from letsfuk.handlers.push_notifications import (
     PushSubscribeHandler, PushUnsubscribeHandler,
     PushCheckHandler)
 from letsfuk.handlers.s3 import S3PresignUploadHandler
-from letsfuk.handlers.stations import StationsHandler, SubscribeHandler
+from letsfuk.handlers.stations import (
+    StationsHandler, SubscribeHandler,
+    StationHandler
+)
 from letsfuk.handlers.status import StatusHandler
 from letsfuk.handlers.users import UsersHandler, UserHandler, WhoAmIHandler
 from letsfuk.handlers.websocket import MessageWebSocketHandler
@@ -51,7 +54,7 @@ def make_app():
         ('/users/({})/?'.format(uuid_regex), UserHandler),
         ('/users/({})/station/?'.format(uuid_regex), SubscribeHandler),
         ('/stations/?', StationsHandler),
-        ('/stations/({})/?'.format(uuid_regex), StationsHandler),
+        ('/stations/({})/?'.format(uuid_regex), StationHandler),
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),

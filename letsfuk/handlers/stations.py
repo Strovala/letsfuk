@@ -21,6 +21,8 @@ class StationsHandler(BaseHandler):
         station = Station.add(self.request.body)
         return station.to_dict(), 200
 
+
+class StationHandler(BaseHandler):
     @endpoint_wrapper()
     @map_exception(out_of=StationNotFound, make=NotFound)
     @check_session()
@@ -28,8 +30,8 @@ class StationsHandler(BaseHandler):
         station = Station.get(station_id)
         members = Station.get_members(station)
         return {
-            "station": station.to_dict(),
-            "members": [member.to_dict() for member in members]
+           "station": station.to_dict(),
+           "members": [member.to_dict() for member in members]
         }, 200
 
 
