@@ -341,6 +341,7 @@ class ChatResponse(object):
 
         db = inject.instance('db')
         self.receiver = dict()
+        self.members = []
         user = User.query_by_user_id(db, receiver_id)
         if user is not None:
             self.receiver = user.to_dict()
@@ -352,6 +353,9 @@ class ChatResponse(object):
                 id=station.station_id,
                 username="Station",
                 is_station=True
+            )
+            self.members = Subscriber.get_users_for_station(
+                db, station.station_id
             )
 
         # TODO: Now that avatar_key is changable maybe update cache or clear it
@@ -380,5 +384,6 @@ class ChatResponse(object):
         return {
             "receiver": self.receiver,
             "unread": self.unread,
-            "messages": self.messages
+            "messages": self.messages,
+            "members": [member.to_dict() for member in self.members]
         }
