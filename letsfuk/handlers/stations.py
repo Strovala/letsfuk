@@ -6,8 +6,8 @@ from letsfuk.errors import BadRequest, NotFound
 from letsfuk.handlers import BaseHandler
 from letsfuk.models.station import (
     Station, InvalidLongitude, InvalidLatitude,
-    Subscriber
-)
+    Subscriber,
+    StationNotFound)
 from letsfuk.models.user import UserNotFound, User
 
 
@@ -20,6 +20,17 @@ class StationsHandler(BaseHandler):
         Station.validate_location(self.request.body)
         station = Station.add(self.request.body)
         return station.to_dict(), 200
+
+    @endpoint_wrapper()
+    @map_exception(out_of=StationNotFound, make=NotFound)
+    @check_session()
+    def get(self, station_id):
+        station = Station.get(station_id)
+        members = Station.get_members(station)
+        return {
+            "station": station.to_dict(),
+            "members": [member.to_dict() for member in members]
+        }, 200
 
 
 class SubscribeHandler(BaseHandler):

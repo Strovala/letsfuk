@@ -59,6 +59,22 @@ class Station(object):
         return station
 
     @classmethod
+    def get(cls, station_id):
+        db = inject.instance('db')
+        station = DbStation.query_by_station_id(db, station_id)
+        if station is None:
+            raise StationNotFound(
+                "There is no station wirh station_id: {}".format(station_id)
+            )
+        return station
+
+    @classmethod
+    def get_members(cls, station):
+        db = inject.instance('db')
+        members = DbSubscriber.get_users_for_station(db, station.station_id)
+        return members
+
+    @classmethod
     def get_closest(cls, lat, lon):
         db = inject.instance('db')
         station = DbStation.get_closest(db, lat, lon)

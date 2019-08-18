@@ -128,3 +128,27 @@ class TestStations(BaseAsyncHTTPTestCase):
         response_body = json.loads(response.body.decode())
         response_station_id = response_body.get('station_id')
         self.assertEqual(station.station_id, response_station_id)
+
+    def test_get_station(self):
+        station = self.add_station()
+        another_station = self.add_station()
+        session, _ = self.ensure_login(station=station)
+        _, _ = self.ensure_login(station=station)
+        _, _ = self.ensure_login(station=another_station)
+        _, _ = self.ensure_login(station=station)
+        response = self.fetch(
+            '/stations/{}'.format(station.station_id),
+            method="GET",
+            headers={
+                "session-id": session.session_id
+            }
+        )
+        self.assertEqual(response.code, 200)
+        response_body = json.loads(response.body.decode())
+        response_station = response_body.get('station')
+        response_members = response_body.get('members')
+        self.assertEqual(
+            response_station.get('station_id'), station.station_id
+        )
+        self.assertEqual(len(response_members), 3)
+

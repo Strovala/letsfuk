@@ -51,6 +51,7 @@ def make_app():
         ('/users/({})/?'.format(uuid_regex), UserHandler),
         ('/users/({})/station/?'.format(uuid_regex), SubscribeHandler),
         ('/stations/?', StationsHandler),
+        ('/stations/({})/?'.format(uuid_regex), StationsHandler),
         ('/stations/subscribe/?', SubscribeHandler),
         ('/messages/?', MessagesHandler),
         ('/messages/({})/?'.format(uuid_regex), ChatMessagesHandler),
