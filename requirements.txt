@@ -8,7 +8,7 @@ botocore==1.12.204
 certifi==2019.6.16
 cffi==1.12.2
 chardet==3.0.4
-cryptography==2.7
+cryptography==3.2
 docutils==0.14
 http-ece==1.1.0
 idna==2.8
